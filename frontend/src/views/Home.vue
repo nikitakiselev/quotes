@@ -86,7 +86,7 @@
           @click="loadRandomQuote"
           :disabled="loading"
           :class="[
-            'px-5 sm:px-8 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2',
+            'px-5 sm:px-8 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2',
             isSpacePressed ? 'bg-gray-700 scale-95' : 'bg-apple-dark hover:bg-gray-800'
           ]"
         >
