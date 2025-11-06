@@ -1,19 +1,19 @@
 <template>
-  <div class="h-full min-h-0 flex flex-col items-center justify-center px-4 py-4 sm:py-8 bg-gradient-to-br from-gray-50 to-white">
+  <div class="h-full min-h-0 flex flex-col items-center justify-center px-4 py-4 sm:py-8 bg-gradient-to-br from-gray-50 to-white relative">
     <div class="max-w-4xl w-full text-center">
-      <!-- Кнопки Top -->
-      <div class="mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+      <!-- Кнопки Top - прибиты к верху -->
+      <div class="absolute top-4 left-0 right-0 flex flex-row gap-2 justify-center items-center">
         <button
           @click="loadTopWeekly"
           :disabled="loading"
-          class="px-6 py-2.5 text-sm sm:text-base bg-white border border-gray-300 text-apple-dark rounded-full font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
+          class="px-4 py-1.5 text-xs bg-white border border-gray-300 text-apple-dark rounded-full font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
         >
           Top за неделю
         </button>
         <button
           @click="loadTopAllTime"
           :disabled="loading"
-          class="px-6 py-2.5 text-sm sm:text-base bg-white border border-gray-300 text-apple-dark rounded-full font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
+          class="px-4 py-1.5 text-xs bg-white border border-gray-300 text-apple-dark rounded-full font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
         >
           Top за всё время
         </button>
@@ -46,23 +46,23 @@
         <p class="text-lg">{{ error }}</p>
       </div>
 
-      <!-- Кнопки действий -->
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <!-- Кнопки действий - в одну строку на всех устройствах -->
+      <div class="flex flex-row gap-3 sm:gap-4 justify-center items-center">
         <!-- Кнопка лайка -->
         <button
           @click="handleLike"
           :disabled="loading || !quote"
           :class="[
-            'px-6 py-3 rounded-full font-medium text-base transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2',
+            'px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2',
             isLiked 
               ? 'bg-red-50 text-red-500 border-2 border-red-200 hover:bg-red-100 hover:border-red-300 shadow-sm' 
               : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
           ]"
         >
-          <span class="flex items-center gap-2">
+          <span class="flex items-center gap-1.5 sm:gap-2">
             <span 
               :class="[
-                'text-xl transition-transform duration-300',
+                'text-lg sm:text-xl transition-transform duration-300',
                 isLiked ? 'scale-110' : 'scale-100',
                 likeAnimating ? 'animate-pulse' : ''
               ]"
@@ -77,7 +77,7 @@
         <button
           @click="loadRandomQuote"
           :disabled="loading"
-          class="px-8 py-3 bg-apple-dark text-white rounded-full font-medium text-base hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
+          class="px-5 sm:px-8 py-2.5 sm:py-3 bg-apple-dark text-white rounded-full font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
         >
           {{ loading ? 'Загрузка...' : 'Следующая цитата' }}
         </button>
