@@ -85,8 +85,26 @@
         >
           <span>{{ loading ? 'Загрузка...' : 'Следующая цитата' }}</span>
           <!-- Kbd компонент - только для десктопа -->
-          <kbd class="hidden md:inline-flex items-center justify-center min-w-[60px] px-3 py-1.5 text-[10px] font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm">
-            <span class="text-gray-500">Space</span>
+          <kbd class="hidden md:inline-flex items-center justify-center w-8 h-5 px-1.5 bg-white border border-gray-300 rounded shadow-sm">
+            <svg
+              width="20"
+              height="8"
+              viewBox="0 0 20 8"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="text-gray-600"
+            >
+              <rect
+                x="0.5"
+                y="0.5"
+                width="19"
+                height="7"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1"
+                fill="none"
+              />
+            </svg>
           </kbd>
         </button>
       </div>
