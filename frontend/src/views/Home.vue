@@ -36,10 +36,15 @@
         </p>
       </div>
 
-      <!-- Загрузка -->
-      <div v-if="loading" class="mb-8">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-apple-dark"></div>
-      </div>
+      <!-- Загрузка - поверх всей страницы -->
+      <Transition name="loader">
+        <div
+          v-if="loading"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm"
+        >
+          <div class="animate-spin rounded-full h-16 w-16 border-4 border-gray-300 border-t-apple-dark"></div>
+        </div>
+      </Transition>
 
       <!-- Ошибка -->
       <div v-if="error" class="mb-8 text-red-500">
@@ -264,4 +269,20 @@ watch(() => route.params.id, (newId, oldId) => {
   }
 })
 </script>
+
+<style scoped>
+/* Анимация появления loader */
+.loader-enter-active {
+  transition: opacity 0.2s ease-out;
+}
+
+.loader-leave-active {
+  transition: opacity 0.2s ease-in;
+}
+
+.loader-enter-from,
+.loader-leave-to {
+  opacity: 0;
+}
+</style>
 
