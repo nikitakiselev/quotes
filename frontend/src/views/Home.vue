@@ -142,13 +142,16 @@
       <div
         v-if="showHotkeysModal"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        @click.self="showHotkeysModal = false"
+        @click="showHotkeysModal = false"
       >
         <!-- Размытый фон -->
         <div class="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm"></div>
         
         <!-- Модальное окно -->
-        <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+        <div
+          class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8"
+          @click.stop
+        >
           <!-- Заголовок -->
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-light text-apple-dark">Горячие клавиши</h2>
