@@ -561,18 +561,28 @@ watch(() => route.params.id, (newId, oldId) => {
 }
 
 .modal-enter-active .modal-backdrop {
-  transition: background-color 0.3s ease-out, backdrop-filter 0.3s ease-out, -webkit-backdrop-filter 0.3s ease-out;
+  transition: background-color 0.25s ease-out, backdrop-filter 0.25s ease-out, -webkit-backdrop-filter 0.25s ease-out;
+  transition-delay: 0s;
 }
 
 .modal-leave-active .modal-backdrop {
   transition: background-color 0.2s ease-in, backdrop-filter 0.2s ease-in, -webkit-backdrop-filter 0.2s ease-in;
 }
 
-.modal-enter-from .modal-backdrop,
+.modal-enter-from .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+}
+
 .modal-leave-to .modal-backdrop {
   background-color: rgba(0, 0, 0, 0);
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
+}
+
+.modal-enter-active .bg-white {
+  transition-delay: 0.05s;
 }
 
 /* Улучшение отзывчивости на тач-устройствах */
