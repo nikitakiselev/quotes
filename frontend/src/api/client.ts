@@ -115,5 +115,11 @@ export const quotesApi = {
     const response = await apiClient.get<Quote>('/quotes/top/alltime')
     return response.data
   },
+
+  // Проверить, лайкнул ли пользователь цитату
+  isLiked: async (id: string): Promise<boolean> => {
+    const response = await apiClient.get<{ is_liked: boolean }>(`/quotes/${id}/is-liked`)
+    return response.data.is_liked
+  },
 }
 

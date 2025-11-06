@@ -142,6 +142,27 @@ const loadQuote = async (quoteLoader: () => Promise<Quote>) => {
   
   try {
     quote.value = await quoteLoader()
+    
+    // Синхронизируем localStorage с сервером
+    if (quote.value) {
+      try {
+        const serverIsLiked = await quotesApi.isLiked(quote.value.id)
+        const liked = getLikedQuotes()
+        
+        if (serverIsLiked) {
+          // Если на сервере лайк есть, добавляем в localStorage
+          liked.add(quote.value.id)
+          saveLikedQuotes(liked)
+        } else {
+          // Если на сервере лайка нет, удаляем из localStorage
+          liked.delete(quote.value.id)
+          saveLikedQuotes(liked)
+        }
+      } catch (err) {
+        // Игнорируем ошибки проверки статуса лайка
+        console.warn('Failed to check like status:', err)
+      }
+    }
   } catch (err: unknown) {
     const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
     const errorMessage = error?.response?.data?.error || error?.message || 'Неизвестная ошибка'
