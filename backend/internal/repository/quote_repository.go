@@ -241,7 +241,11 @@ func (r *quoteRepository) Like(id string, userIP, userAgent string) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			// Игнорируем ошибку, если транзакция уже была закоммичена
+		}
+	}()
 
 	// Проверяем, не лайкал ли уже этот пользователь эту цитату (внутри транзакции)
 	checkQuery := `
@@ -382,7 +386,11 @@ func (r *quoteRepository) ResetLikes() error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			// Игнорируем ошибку, если транзакция уже была закоммичена
+		}
+	}()
 
 	// Шаг 1: Обнуляем счетчики лайков у всех цитат
 	updateQuery := `
