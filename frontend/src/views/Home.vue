@@ -87,8 +87,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { quotesApi, type Quote } from '@/api/client'
+
+const route = useRoute()
+const router = useRouter()
 
 const quote = ref<Quote | null>(null)
 const loading = ref(false)
@@ -115,13 +119,18 @@ const quoteClass = computed(() => {
   return 'text-4xl md:text-5xl lg:text-6xl'
 })
 
-const loadQuote = async (quoteLoader: () => Promise<Quote>) => {
+const loadQuote = async (quoteLoader: () => Promise<Quote>, updateUrl = true) => {
   loading.value = true
   error.value = null
   
   try {
     // Сервер автоматически возвращает is_liked в ответе
     quote.value = await quoteLoader()
+    
+    // Обновляем URL в адресной строке, чтобы он указывал на ID цитаты
+    if (updateUrl && quote.value) {
+      router.replace({ name: 'Quote', params: { id: quote.value.id } })
+    }
   } catch (err: unknown) {
     const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
     const errorMessage = error?.response?.data?.error || error?.message || 'Неизвестная ошибка'
@@ -137,9 +146,32 @@ const loadQuote = async (quoteLoader: () => Promise<Quote>) => {
   }
 }
 
-const loadRandomQuote = () => loadQuote(quotesApi.getRandom)
-const loadTopWeekly = () => loadQuote(quotesApi.getTopWeekly)
-const loadTopAllTime = () => loadQuote(quotesApi.getTopAllTime)
+// Загрузка цитаты по ID из URL
+const loadQuoteById = async (id: string) => {
+  await loadQuote(() => quotesApi.getById(id), false) // Не обновляем URL, так как он уже правильный
+}
+
+const loadRandomQuote = () => {
+  // Очищаем ID из URL при загрузке случайной цитаты
+  if (route.params.id) {
+    router.replace('/')
+  }
+  loadQuote(quotesApi.getRandom)
+}
+const loadTopWeekly = () => {
+  // Очищаем ID из URL
+  if (route.params.id) {
+    router.replace('/')
+  }
+  loadQuote(quotesApi.getTopWeekly)
+}
+const loadTopAllTime = () => {
+  // Очищаем ID из URL
+  if (route.params.id) {
+    router.replace('/')
+  }
+  loadQuote(quotesApi.getTopAllTime)
+}
 
 const handleLike = async () => {
   if (!quote.value || loading.value || isLiked.value) return
@@ -179,8 +211,23 @@ const handleDoubleClick = () => {
   handleLike()
 }
 
+// Загружаем цитату при монтировании или изменении ID в URL
 onMounted(() => {
-  loadRandomQuote()
+  const quoteId = route.params.id as string | undefined
+  if (quoteId) {
+    loadQuoteById(quoteId)
+  } else {
+    loadRandomQuote()
+  }
+})
+
+// Отслеживаем изменения ID в URL
+watch(() => route.params.id, (newId) => {
+  if (newId && typeof newId === 'string') {
+    loadQuoteById(newId)
+  } else if (!newId && !quote.value) {
+    loadRandomQuote()
+  }
 })
 </script>
 

@@ -6,6 +6,7 @@ import Home from './views/Home.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
+  { path: '/quote/:id', name: 'Quote', component: Home },
 ]
 
 const router = createRouter({
