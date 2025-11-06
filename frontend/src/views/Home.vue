@@ -112,6 +112,92 @@
         </button>
       </div>
     </div>
+
+    <!-- Кнопка помощи (хоткеи) -->
+    <button
+      @click="showHotkeysModal = true"
+      class="fixed bottom-6 right-6 w-10 h-10 bg-white border border-gray-300 rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 z-40"
+      title="Горячие клавиши"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </button>
+
+    <!-- Модальное окно с хоткеями -->
+    <Transition name="modal">
+      <div
+        v-if="showHotkeysModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        @click.self="showHotkeysModal = false"
+      >
+        <!-- Размытый фон -->
+        <div class="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm"></div>
+        
+        <!-- Модальное окно -->
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+          <!-- Заголовок -->
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-light text-apple-dark">Горячие клавиши</h2>
+            <button
+              @click="showHotkeysModal = false"
+              class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-apple-dark rounded-full p-1"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Список хоткеев -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+              <div class="flex items-center gap-3">
+                <kbd class="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-sm font-medium text-gray-700">
+                  Space
+                </kbd>
+                <span class="text-gray-700">Следующая цитата</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+              <div class="flex items-center gap-3">
+                <kbd class="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-sm font-medium text-gray-700">
+                  F
+                </kbd>
+                <span class="text-gray-700">Поставить лайк</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Подсказка -->
+          <p class="mt-6 text-sm text-gray-500 text-center">
+            Нажмите вне окна или ESC для закрытия
+          </p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -130,6 +216,7 @@ const error = ref<string | null>(null)
 const likeAnimating = ref(false)
 const isUpdatingUrl = ref(false) // Флаг для предотвращения повторной загрузки при программном обновлении URL
 const isSpacePressed = ref(false) // Флаг для отслеживания нажатия пробела
+const showHotkeysModal = ref(false) // Флаг для отображения модального окна с хоткеями
 let loaderTimer: ReturnType<typeof setTimeout> | null = null
 
 // Проверка, лайкнута ли текущая цитата (из ответа сервера)
@@ -319,6 +406,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
       handleLike()
     }
   }
+
+  // Обрабатываем клавишу Escape для закрытия модального окна
+  if (event.code === 'Escape' || event.key === 'Escape') {
+    if (showHotkeysModal.value) {
+      showHotkeysModal.value = false
+    }
+  }
 }
 
 // Обработчик отпускания клавиши пробела (для загрузки цитаты)
@@ -415,6 +509,31 @@ watch(() => route.params.id, (newId, oldId) => {
 .quote-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* Анимация модального окна */
+.modal-enter-active {
+  transition: opacity 0.3s ease-out;
+}
+
+.modal-leave-active {
+  transition: opacity 0.2s ease-in;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .bg-white,
+.modal-leave-active .bg-white {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.modal-enter-from .bg-white,
+.modal-leave-to .bg-white {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
 }
 </style>
 
