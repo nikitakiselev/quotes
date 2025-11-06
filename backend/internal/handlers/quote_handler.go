@@ -329,32 +329,6 @@ func (h *QuoteHandler) GetTopAllTime(c *gin.Context) {
 	c.JSON(http.StatusOK, quote.ToResponse(isLiked))
 }
 
-// IsLiked проверяет, лайкнул ли текущий пользователь цитату
-// @Summary Проверить статус лайка
-// @Description Проверяет, поставил ли текущий пользователь лайк указанной цитате
-// @Tags quotes
-// @Accept json
-// @Produce json
-// @Param id path string true "ID цитаты"
-// @Success 200 {object} map[string]bool
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/quotes/{id}/is-liked [get]
-func (h *QuoteHandler) IsLiked(c *gin.Context) {
-	id := c.Param("id")
-
-	// Получаем IP адрес пользователя
-	userIP := getUserIP(c)
-
-	isLiked, err := h.repo.IsLiked(id, userIP)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"is_liked": isLiked})
-}
-
 // ResetLikes сбрасывает все лайки
 // @Summary Сбросить все лайки
 // @Description Обнуляет счетчики лайков у всех цитат и удаляет все записи о лайках
