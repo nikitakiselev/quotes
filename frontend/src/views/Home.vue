@@ -26,7 +26,7 @@
         :class="{ 'opacity-0': loading }"
       >
         <blockquote 
-          :class="['font-light leading-tight text-apple-dark mb-8 text-balance select-none', quoteClass]"
+          :class="['font-light leading-tight text-apple-dark mb-8 text-balance', quoteClass]"
         >
           "{{ quote.text }}"
         </blockquote>
