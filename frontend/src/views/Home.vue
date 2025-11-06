@@ -68,14 +68,15 @@ const loadRandomQuote = async () => {
   
   try {
     quote.value = await quotesApi.getRandom()
-  } catch (err: any) {
-    const errorMessage = err?.response?.data?.error || err?.message || 'Неизвестная ошибка'
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
+    const errorMessage = error?.response?.data?.error || error?.message || 'Неизвестная ошибка'
     error.value = `Не удалось загрузить цитату: ${errorMessage}. Попробуйте еще раз.`
     console.error('Error loading quote:', {
       error: err,
-      message: err?.message,
-      response: err?.response?.data,
-      status: err?.response?.status,
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status,
     })
   } finally {
     loading.value = false
