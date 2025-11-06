@@ -38,15 +38,17 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 	{
 		quotes := api.Group("/quotes")
 		{
+			// Специфичные роуты должны быть раньше параметризованных
 			quotes.GET("/random", quoteHandler.GetRandom)
-			quotes.GET("", quoteHandler.GetAll)
-			quotes.GET("/:id", quoteHandler.GetByID)
-			quotes.POST("", quoteHandler.Create)
-			quotes.PUT("/:id", quoteHandler.Update)
-			quotes.DELETE("/:id", quoteHandler.Delete)
-			quotes.PUT("/:id/like", quoteHandler.Like)
 			quotes.GET("/top/weekly", quoteHandler.GetTopWeekly)
 			quotes.GET("/top/alltime", quoteHandler.GetTopAllTime)
+			quotes.GET("", quoteHandler.GetAll)
+			quotes.POST("", quoteHandler.Create)
+			// Параметризованные роуты в конце
+			quotes.PUT("/:id/like", quoteHandler.Like)
+			quotes.GET("/:id", quoteHandler.GetByID)
+			quotes.PUT("/:id", quoteHandler.Update)
+			quotes.DELETE("/:id", quoteHandler.Delete)
 		}
 	}
 
