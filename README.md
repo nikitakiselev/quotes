@@ -1,6 +1,21 @@
 # Quotes Project
 
+<div align="center">
+
+![CI](https://github.com/nikitakiselev/quotes/workflows/CI/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)
+![Node Version](https://img.shields.io/badge/node-20.x-green.svg)
+![Vue](https://img.shields.io/badge/vue-3.3-4FC08D.svg?logo=vue.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue.svg?logo=typescript)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791.svg?logo=postgresql)
+![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg?logo=docker)
+
 Минималистичное приложение для отображения случайных цитат с административной панелью в стиле Apple.
+
+[🚀 Быстрый старт](#-быстрый-старт) • [📡 API](#-api-endpoints) • [💻 Разработка](#-разработка) • [🐳 Docker](#-docker-команды)
+
+</div>
 
 ## 🎯 Особенности
 
