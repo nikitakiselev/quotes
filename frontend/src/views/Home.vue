@@ -85,7 +85,10 @@
         <button
           @click="loadRandomQuote"
           :disabled="loading"
-          class="px-5 sm:px-8 py-2.5 sm:py-3 bg-apple-dark text-white rounded-full font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2"
+          :class="[
+            'px-5 sm:px-8 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2',
+            isSpacePressed ? 'bg-gray-700 scale-95' : 'bg-apple-dark hover:bg-gray-800'
+          ]"
         >
           <span>{{ loading ? 'Загрузка...' : 'Следующая цитата' }}</span>
           <!-- Kbd компонент - только для десктопа -->
@@ -126,6 +129,7 @@ const showLoader = ref(false) // Показывать loader только есл
 const error = ref<string | null>(null)
 const likeAnimating = ref(false)
 const isUpdatingUrl = ref(false) // Флаг для предотвращения повторной загрузки при программном обновлении URL
+const isSpacePressed = ref(false) // Флаг для отслеживания нажатия пробела
 let loaderTimer: ReturnType<typeof setTimeout> | null = null
 
 // Проверка, лайкнута ли текущая цитата (из ответа сервера)
@@ -283,7 +287,7 @@ const handleLike = async () => {
   }
 }
 
-// Обработчик нажатия клавиши пробела
+// Обработчик нажатия клавиши пробела (для визуальной обратной связи)
 const handleKeyDown = (event: KeyboardEvent) => {
   // Игнорируем, если пользователь вводит текст в поле ввода
   if (
@@ -298,6 +302,32 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if (event.code === 'Space' || event.key === ' ') {
     // Предотвращаем прокрутку страницы при нажатии пробела
     event.preventDefault()
+    
+    // Устанавливаем флаг нажатия для визуальной обратной связи
+    if (!isSpacePressed.value && !loading.value) {
+      isSpacePressed.value = true
+    }
+  }
+}
+
+// Обработчик отпускания клавиши пробела (для загрузки цитаты)
+const handleKeyUp = (event: KeyboardEvent) => {
+  // Игнорируем, если пользователь вводит текст в поле ввода
+  if (
+    event.target instanceof HTMLInputElement ||
+    event.target instanceof HTMLTextAreaElement ||
+    event.target instanceof HTMLSelectElement
+  ) {
+    return
+  }
+
+  // Обрабатываем только пробел
+  if (event.code === 'Space' || event.key === ' ') {
+    // Предотвращаем прокрутку страницы при отпускании пробела
+    event.preventDefault()
+    
+    // Сбрасываем флаг нажатия
+    isSpacePressed.value = false
     
     // Загружаем случайную цитату только если не идет загрузка
     if (!loading.value) {
@@ -315,13 +345,15 @@ onMounted(() => {
     loadRandomQuote()
   }
 
-  // Добавляем обработчик нажатия клавиш
+  // Добавляем обработчики нажатия и отпускания клавиш
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp)
 })
 
-// Удаляем обработчик при размонтировании
+// Удаляем обработчики при размонтировании
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleKeyUp)
 })
 
 // Отслеживаем изменения ID в URL
