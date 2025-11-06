@@ -98,6 +98,7 @@ const quote = ref<Quote | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const likeAnimating = ref(false)
+const isUpdatingUrl = ref(false) // Флаг для предотвращения повторной загрузки при программном обновлении URL
 
 // Проверка, лайкнута ли текущая цитата (из ответа сервера)
 const isLiked = computed(() => {
@@ -125,11 +126,19 @@ const loadQuote = async (quoteLoader: () => Promise<Quote>, updateUrl = true) =>
   
   try {
     // Сервер автоматически возвращает is_liked в ответе
-    quote.value = await quoteLoader()
+    const loadedQuote = await quoteLoader()
+    quote.value = loadedQuote
     
     // Обновляем URL в адресной строке, чтобы он указывал на ID цитаты
-    if (updateUrl && quote.value) {
-      router.replace({ name: 'Quote', params: { id: quote.value.id } })
+    // Но только если ID в URL отличается от ID загруженной цитаты
+    if (updateUrl && loadedQuote && route.params.id !== loadedQuote.id) {
+      isUpdatingUrl.value = true
+      router.replace({ name: 'Quote', params: { id: loadedQuote.id } }).finally(() => {
+        // Небольшая задержка, чтобы watch успел обработать изменение
+        setTimeout(() => {
+          isUpdatingUrl.value = false
+        }, 100)
+      })
     }
   } catch (err: unknown) {
     const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
@@ -148,27 +157,46 @@ const loadQuote = async (quoteLoader: () => Promise<Quote>, updateUrl = true) =>
 
 // Загрузка цитаты по ID из URL
 const loadQuoteById = async (id: string) => {
+  // Проверяем, что это действительно другая цитата
+  if (quote.value?.id === id) {
+    return // Цитата уже загружена
+  }
   await loadQuote(() => quotesApi.getById(id), false) // Не обновляем URL, так как он уже правильный
 }
 
 const loadRandomQuote = () => {
   // Очищаем ID из URL при загрузке случайной цитаты
   if (route.params.id) {
-    router.replace('/')
+    isUpdatingUrl.value = true
+    router.replace('/').finally(() => {
+      setTimeout(() => {
+        isUpdatingUrl.value = false
+      }, 100)
+    })
   }
   loadQuote(quotesApi.getRandom)
 }
 const loadTopWeekly = () => {
   // Очищаем ID из URL
   if (route.params.id) {
-    router.replace('/')
+    isUpdatingUrl.value = true
+    router.replace('/').finally(() => {
+      setTimeout(() => {
+        isUpdatingUrl.value = false
+      }, 100)
+    })
   }
   loadQuote(quotesApi.getTopWeekly)
 }
 const loadTopAllTime = () => {
   // Очищаем ID из URL
   if (route.params.id) {
-    router.replace('/')
+    isUpdatingUrl.value = true
+    router.replace('/').finally(() => {
+      setTimeout(() => {
+        isUpdatingUrl.value = false
+      }, 100)
+    })
   }
   loadQuote(quotesApi.getTopAllTime)
 }
@@ -222,8 +250,14 @@ onMounted(() => {
 })
 
 // Отслеживаем изменения ID в URL
-watch(() => route.params.id, (newId) => {
-  if (newId && typeof newId === 'string') {
+watch(() => route.params.id, (newId, oldId) => {
+  // Пропускаем загрузку, если URL обновляется программно
+  if (isUpdatingUrl.value) {
+    return
+  }
+  
+  // Загружаем цитату только если ID действительно изменился
+  if (newId && typeof newId === 'string' && newId !== oldId) {
     loadQuoteById(newId)
   } else if (!newId && !quote.value) {
     loadRandomQuote()
