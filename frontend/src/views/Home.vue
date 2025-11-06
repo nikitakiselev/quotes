@@ -145,7 +145,7 @@
         @click="showHotkeysModal = false"
       >
         <!-- Размытый фон -->
-        <div class="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 modal-backdrop"></div>
         
         <!-- Модальное окно -->
         <div
@@ -551,6 +551,28 @@ watch(() => route.params.id, (newId, oldId) => {
 .modal-leave-to .bg-white {
   opacity: 0;
   transform: scale(0.95) translateY(-10px);
+}
+
+/* Плавное размытие и затемнение фона */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-enter-active .modal-backdrop {
+  transition: background-color 0.3s ease-out, backdrop-filter 0.3s ease-out, -webkit-backdrop-filter 0.3s ease-out;
+}
+
+.modal-leave-active .modal-backdrop {
+  transition: background-color 0.2s ease-in, backdrop-filter 0.2s ease-in, -webkit-backdrop-filter 0.2s ease-in;
+}
+
+.modal-enter-from .modal-backdrop,
+.modal-leave-to .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 
 /* Улучшение отзывчивости на тач-устройствах */
