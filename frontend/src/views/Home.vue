@@ -79,7 +79,7 @@
           :disabled="loading"
           class="px-8 py-3 bg-apple-dark text-white rounded-full font-medium text-base hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
         >
-          {{ loading ? 'Загрузка...' : 'Обновить цитату' }}
+          {{ loading ? 'Загрузка...' : 'Следующая цитата' }}
         </button>
       </div>
     </div>
