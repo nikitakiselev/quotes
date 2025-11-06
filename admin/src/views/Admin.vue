@@ -186,7 +186,7 @@ const editingQuote = ref<Quote | null>(null)
 
 const form = ref<CreateQuoteRequest>({
   text: '',
-  author: '',
+  author: 'Неизвестный автор',
 })
 
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -275,7 +275,7 @@ const handleSubmit = async () => {
         showConfirmButton: false,
       })
     }
-    form.value = { text: '', author: '' }
+    form.value = { text: '', author: 'Неизвестный автор' }
     editingQuote.value = null
     await loadQuotes()
   } catch (err) {
@@ -302,7 +302,7 @@ const editQuote = (quote: Quote) => {
 
 const cancelEdit = () => {
   editingQuote.value = null
-  form.value = { text: '', author: '' }
+  form.value = { text: '', author: 'Неизвестный автор' }
 }
 
 const deleteQuote = async (id: string) => {
