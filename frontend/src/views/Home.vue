@@ -26,8 +26,7 @@
         :class="{ 'opacity-0': loading }"
       >
         <blockquote 
-          @dblclick="handleDoubleClick"
-          :class="['font-light leading-tight text-apple-dark mb-8 text-balance cursor-pointer select-none', quoteClass]"
+          :class="['font-light leading-tight text-apple-dark mb-8 text-balance select-none', quoteClass]"
         >
           "{{ quote.text }}"
         </blockquote>
@@ -39,7 +38,7 @@
       <!-- Загрузка - поверх всей страницы -->
       <Transition name="loader">
         <div
-          v-if="loading"
+          v-if="showLoader"
           class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm"
         >
           <div class="animate-spin rounded-full h-16 w-16 border-4 border-gray-300 border-t-apple-dark"></div>
@@ -101,9 +100,11 @@ const router = useRouter()
 
 const quote = ref<Quote | null>(null)
 const loading = ref(false)
+const showLoader = ref(false) // Показывать loader только если загрузка длится > 0.8s
 const error = ref<string | null>(null)
 const likeAnimating = ref(false)
 const isUpdatingUrl = ref(false) // Флаг для предотвращения повторной загрузки при программном обновлении URL
+let loaderTimer: ReturnType<typeof setTimeout> | null = null
 
 // Проверка, лайкнута ли текущая цитата (из ответа сервера)
 const isLiked = computed(() => {
@@ -128,6 +129,20 @@ const quoteClass = computed(() => {
 const loadQuote = async (quoteLoader: () => Promise<Quote>, updateUrl = true) => {
   loading.value = true
   error.value = null
+  showLoader.value = false
+  
+  // Очищаем предыдущий таймер, если есть
+  if (loaderTimer) {
+    clearTimeout(loaderTimer)
+    loaderTimer = null
+  }
+  
+  // Показываем loader только если загрузка длится больше 0.8 секунд
+  loaderTimer = setTimeout(() => {
+    if (loading.value) {
+      showLoader.value = true
+    }
+  }, 800)
   
   try {
     // Сервер автоматически возвращает is_liked в ответе
@@ -157,6 +172,13 @@ const loadQuote = async (quoteLoader: () => Promise<Quote>, updateUrl = true) =>
     })
   } finally {
     loading.value = false
+    showLoader.value = false
+    
+    // Очищаем таймер
+    if (loaderTimer) {
+      clearTimeout(loaderTimer)
+      loaderTimer = null
+    }
   }
 }
 
@@ -239,10 +261,6 @@ const handleLike = async () => {
   }
 }
 
-const handleDoubleClick = () => {
-  if (!quote.value || loading.value) return
-  handleLike()
-}
 
 // Загружаем цитату при монтировании или изменении ID в URL
 onMounted(() => {
