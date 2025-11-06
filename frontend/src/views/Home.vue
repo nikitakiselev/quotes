@@ -22,8 +22,7 @@
       <!-- Цитата -->
       <div 
         v-if="quote" 
-        class="mb-8 transition-all duration-500 ease-in-out"
-        :class="{ 'opacity-0': loading }"
+        class="mb-8"
       >
         <blockquote 
           :class="['font-light leading-tight text-apple-dark mb-8 text-balance', quoteClass]"
