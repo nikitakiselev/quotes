@@ -21,12 +21,15 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 	corsConfig := cors.DefaultConfig()
 	if cfg.CORSOrigin == "*" {
 		corsConfig.AllowAllOrigins = true
+		corsConfig.AllowWildcard = true
 	} else {
 		corsConfig.AllowOrigins = []string{cfg.CORSOrigin}
 		corsConfig.AllowCredentials = true
 	}
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"}
+	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type"}
+	corsConfig.AllowBrowserExtensions = true
 
 	r.Use(cors.New(corsConfig))
 
