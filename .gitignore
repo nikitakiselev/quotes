@@ -43,3 +43,6 @@ logs/
 *.out
 go.work
 
+# Infrastructure and deployment scripts (server-specific)
+infra/
+
