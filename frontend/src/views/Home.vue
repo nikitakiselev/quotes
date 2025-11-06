@@ -298,7 +298,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     return
   }
 
-  // Обрабатываем только пробел
+  // Обрабатываем пробел
   if (event.code === 'Space' || event.key === ' ') {
     // Предотвращаем прокрутку страницы при нажатии пробела
     event.preventDefault()
@@ -306,6 +306,17 @@ const handleKeyDown = (event: KeyboardEvent) => {
     // Устанавливаем флаг нажатия для визуальной обратной связи
     if (!isSpacePressed.value && !loading.value) {
       isSpacePressed.value = true
+    }
+  }
+
+  // Обрабатываем клавишу F для лайка
+  if (event.code === 'KeyF' || event.key === 'f' || event.key === 'F') {
+    // Предотвращаем стандартное поведение
+    event.preventDefault()
+    
+    // Ставим лайк, если цитата есть и не идет загрузка
+    if (quote.value && !loading.value && !isLiked.value) {
+      handleLike()
     }
   }
 }
