@@ -18,6 +18,7 @@ export interface Quote {
   text: string
   author: string
   likes_count: number
+  is_liked?: boolean // Опциональное поле, так как в админке не используется
   created_at: string
   updated_at: string
 }

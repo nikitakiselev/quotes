@@ -46,7 +46,6 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 			quotes.GET("", quoteHandler.GetAll)
 			quotes.POST("", quoteHandler.Create)
 			// Параметризованные роуты в конце
-			quotes.GET("/:id/is-liked", quoteHandler.IsLiked)
 			quotes.PUT("/:id/like", quoteHandler.Like)
 			quotes.GET("/:id", quoteHandler.GetByID)
 			quotes.PUT("/:id", quoteHandler.Update)

@@ -34,6 +34,7 @@ type QuoteResponse struct {
 	Text       string    `json:"text"`
 	Author     string    `json:"author"`
 	LikesCount int       `json:"likes_count"`
+	IsLiked    bool      `json:"is_liked"` // Информация о том, лайкнул ли текущий пользователь эту цитату
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
@@ -48,12 +49,14 @@ type PaginatedQuotesResponse struct {
 }
 
 // ToResponse преобразует Quote в QuoteResponse
-func (q *Quote) ToResponse() QuoteResponse {
+// isLiked указывает, лайкнул ли текущий пользователь эту цитату
+func (q *Quote) ToResponse(isLiked bool) QuoteResponse {
 	return QuoteResponse{
 		ID:         q.ID,
 		Text:       q.Text,
 		Author:     q.Author,
 		LikesCount: q.LikesCount,
+		IsLiked:    isLiked,
 		CreatedAt:  q.CreatedAt,
 		UpdatedAt:  q.UpdatedAt,
 	}

@@ -32,6 +32,7 @@ export interface Quote {
   text: string
   author: string
   likes_count: number
+  is_liked: boolean // Информация о том, лайкнул ли текущий пользователь эту цитату
   created_at: string
   updated_at: string
 }
@@ -114,12 +115,6 @@ export const quotesApi = {
   getTopAllTime: async (): Promise<Quote> => {
     const response = await apiClient.get<Quote>('/quotes/top/alltime')
     return response.data
-  },
-
-  // Проверить, лайкнул ли пользователь цитату
-  isLiked: async (id: string): Promise<boolean> => {
-    const response = await apiClient.get<{ is_liked: boolean }>(`/quotes/${id}/is-liked`)
-    return response.data.is_liked
   },
 }
 

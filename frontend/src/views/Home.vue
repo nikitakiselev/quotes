@@ -95,30 +95,9 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const likeAnimating = ref(false)
 
-// Получение списка лайкнутых цитат из localStorage
-const getLikedQuotes = (): Set<string> => {
-  try {
-    const liked = localStorage.getItem('liked_quotes')
-    return liked ? new Set(JSON.parse(liked)) : new Set()
-  } catch {
-    return new Set()
-  }
-}
-
-// Сохранение списка лайкнутых цитат в localStorage
-const saveLikedQuotes = (liked: Set<string>) => {
-  try {
-    localStorage.setItem('liked_quotes', JSON.stringify(Array.from(liked)))
-  } catch (e) {
-    console.error('Failed to save liked quotes:', e)
-  }
-}
-
-// Проверка, лайкнута ли текущая цитата
+// Проверка, лайкнута ли текущая цитата (из ответа сервера)
 const isLiked = computed(() => {
-  if (!quote.value) return false
-  const liked = getLikedQuotes()
-  return liked.has(quote.value.id)
+  return quote.value?.is_liked || false
 })
 
 // Автоматическое уменьшение шрифта для длинных цитат
@@ -141,28 +120,8 @@ const loadQuote = async (quoteLoader: () => Promise<Quote>) => {
   error.value = null
   
   try {
+    // Сервер автоматически возвращает is_liked в ответе
     quote.value = await quoteLoader()
-    
-    // Синхронизируем localStorage с сервером
-    if (quote.value) {
-      try {
-        const serverIsLiked = await quotesApi.isLiked(quote.value.id)
-        const liked = getLikedQuotes()
-        
-        if (serverIsLiked) {
-          // Если на сервере лайк есть, добавляем в localStorage
-          liked.add(quote.value.id)
-          saveLikedQuotes(liked)
-        } else {
-          // Если на сервере лайка нет, удаляем из localStorage
-          liked.delete(quote.value.id)
-          saveLikedQuotes(liked)
-        }
-      } catch (err) {
-        // Игнорируем ошибки проверки статуса лайка
-        console.warn('Failed to check like status:', err)
-      }
-    }
   } catch (err: unknown) {
     const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
     const errorMessage = error?.response?.data?.error || error?.message || 'Неизвестная ошибка'
@@ -183,25 +142,14 @@ const loadTopWeekly = () => loadQuote(quotesApi.getTopWeekly)
 const loadTopAllTime = () => loadQuote(quotesApi.getTopAllTime)
 
 const handleLike = async () => {
-  if (!quote.value || loading.value) return
-
-  const liked = getLikedQuotes()
-  const wasLiked = liked.has(quote.value.id)
-
-  // Если уже лайкнута локально, не пытаемся ставить лайк снова
-  if (wasLiked) {
-    return
-  }
+  if (!quote.value || loading.value || isLiked.value) return
 
   // Ставим лайк
   try {
     likeAnimating.value = true
+    // Сервер возвращает обновленную цитату с is_liked = true
     const updatedQuote = await quotesApi.like(quote.value.id)
     quote.value = updatedQuote
-    
-    // Сохраняем в localStorage
-    liked.add(quote.value.id)
-    saveLikedQuotes(liked)
 
     // Анимация
     setTimeout(() => {
@@ -211,11 +159,8 @@ const handleLike = async () => {
     const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
     const errorMessage = error?.response?.data?.error || error?.message || 'Не удалось поставить лайк'
     
-    // Если ошибка "уже лайкнуто", просто обновляем локальное состояние
+    // Если ошибка "уже лайкнуто", обновляем цитату для получения актуального состояния
     if (errorMessage.includes('уже') || errorMessage.includes('already')) {
-      liked.add(quote.value.id)
-      saveLikedQuotes(liked)
-      // Обновляем цитату, чтобы получить актуальный счетчик
       try {
         const updatedQuote = await quotesApi.getById(quote.value.id)
         quote.value = updatedQuote

@@ -21,6 +21,19 @@ func NewQuoteHandler(repo repository.QuoteRepository) *QuoteHandler {
 	return &QuoteHandler{repo: repo}
 }
 
+// getUserIP получает IP адрес пользователя из запроса
+func getUserIP(c *gin.Context) string {
+	userIP := c.ClientIP()
+	// Если за прокси, пытаемся получить реальный IP
+	if forwarded := c.GetHeader("X-Forwarded-For"); forwarded != "" {
+		// Берем первый IP из списка
+		if ips := strings.Split(forwarded, ","); len(ips) > 0 {
+			userIP = strings.TrimSpace(ips[0])
+		}
+	}
+	return userIP
+}
+
 // GetRandom возвращает случайную цитату
 // @Summary Получить случайную цитату
 // @Description Возвращает одну случайную цитату из базы данных
@@ -38,7 +51,11 @@ func (h *QuoteHandler) GetRandom(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quote.ToResponse())
+	// Проверяем, лайкнул ли текущий пользователь эту цитату
+	userIP := getUserIP(c)
+	isLiked, _ := h.repo.IsLiked(quote.ID, userIP)
+
+	c.JSON(http.StatusOK, quote.ToResponse(isLiked))
 }
 
 // GetAll возвращает все цитаты с пагинацией
@@ -72,9 +89,12 @@ func (h *QuoteHandler) GetAll(c *gin.Context) {
 		return
 	}
 
+	// Проверяем статус лайка для каждой цитаты
+	userIP := getUserIP(c)
 	responses := make([]models.QuoteResponse, len(quotes))
 	for i, quote := range quotes {
-		responses[i] = quote.ToResponse()
+		isLiked, _ := h.repo.IsLiked(quote.ID, userIP)
+		responses[i] = quote.ToResponse(isLiked)
 	}
 
 	totalPages := repository.CalculateTotalPages(total, pageSize)
@@ -108,7 +128,11 @@ func (h *QuoteHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quote.ToResponse())
+	// Проверяем, лайкнул ли текущий пользователь эту цитату
+	userIP := getUserIP(c)
+	isLiked, _ := h.repo.IsLiked(quote.ID, userIP)
+
+	c.JSON(http.StatusOK, quote.ToResponse(isLiked))
 }
 
 // Create создает новую цитату
@@ -135,7 +159,8 @@ func (h *QuoteHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, quote.ToResponse())
+	// Новая цитата не может быть лайкнута
+	c.JSON(http.StatusCreated, quote.ToResponse(false))
 }
 
 // Update обновляет существующую цитату
@@ -187,7 +212,11 @@ func (h *QuoteHandler) Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, updatedQuote.ToResponse())
+	// Проверяем, лайкнул ли текущий пользователь эту цитату
+	userIP := getUserIP(c)
+	isLiked, _ := h.repo.IsLiked(updatedQuote.ID, userIP)
+
+	c.JSON(http.StatusOK, updatedQuote.ToResponse(isLiked))
 }
 
 // Delete удаляет цитату
@@ -228,15 +257,7 @@ func (h *QuoteHandler) Like(c *gin.Context) {
 	id := c.Param("id")
 
 	// Получаем IP адрес пользователя
-	userIP := c.ClientIP()
-	// Если за прокси, пытаемся получить реальный IP
-	if forwarded := c.GetHeader("X-Forwarded-For"); forwarded != "" {
-		// Берем первый IP из списка
-		if ips := strings.Split(forwarded, ","); len(ips) > 0 {
-			userIP = strings.TrimSpace(ips[0])
-		}
-	}
-	
+	userIP := getUserIP(c)
 	userAgent := c.GetHeader("User-Agent")
 
 	if err := h.repo.Like(id, userIP, userAgent); err != nil {
@@ -256,7 +277,8 @@ func (h *QuoteHandler) Like(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quote.ToResponse())
+	// После лайка пользователь точно лайкнул эту цитату
+	c.JSON(http.StatusOK, quote.ToResponse(true))
 }
 
 // GetTopWeekly возвращает топ цитату за неделю
@@ -276,7 +298,11 @@ func (h *QuoteHandler) GetTopWeekly(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quote.ToResponse())
+	// Проверяем, лайкнул ли текущий пользователь эту цитату
+	userIP := getUserIP(c)
+	isLiked, _ := h.repo.IsLiked(quote.ID, userIP)
+
+	c.JSON(http.StatusOK, quote.ToResponse(isLiked))
 }
 
 // GetTopAllTime возвращает топ цитату за всё время
@@ -296,7 +322,11 @@ func (h *QuoteHandler) GetTopAllTime(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quote.ToResponse())
+	// Проверяем, лайкнул ли текущий пользователь эту цитату
+	userIP := getUserIP(c)
+	isLiked, _ := h.repo.IsLiked(quote.ID, userIP)
+
+	c.JSON(http.StatusOK, quote.ToResponse(isLiked))
 }
 
 // IsLiked проверяет, лайкнул ли текущий пользователь цитату
@@ -314,14 +344,7 @@ func (h *QuoteHandler) IsLiked(c *gin.Context) {
 	id := c.Param("id")
 
 	// Получаем IP адрес пользователя
-	userIP := c.ClientIP()
-	// Если за прокси, пытаемся получить реальный IP
-	if forwarded := c.GetHeader("X-Forwarded-For"); forwarded != "" {
-		// Берем первый IP из списка
-		if ips := strings.Split(forwarded, ","); len(ips) > 0 {
-			userIP = strings.TrimSpace(ips[0])
-		}
-	}
+	userIP := getUserIP(c)
 
 	isLiked, err := h.repo.IsLiked(id, userIP)
 	if err != nil {
