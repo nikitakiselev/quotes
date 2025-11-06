@@ -371,16 +371,20 @@ func (r *quoteRepository) GetTopAllTime() (*models.Quote, error) {
 	return &quote, nil
 }
 
-// ResetLikes сбрасывает все лайки: обнуляет счетчики и удаляет записи из таблицы likes
+// ResetLikes сбрасывает все лайки: обнуляет счетчики и удаляет все записи о пользователях, которые лайкали
+// Это включает:
+// 1. Обнуление счетчика likes_count у всех цитат
+// 2. Удаление всех записей из таблицы likes (включая user_ip, user_agent и т.д.)
+// После сброса пользователи смогут снова ставить лайки на те же цитаты
 func (r *quoteRepository) ResetLikes() error {
-	// Начинаем транзакцию
+	// Начинаем транзакцию для атомарности операции
 	tx, err := r.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	// Обнуляем счетчики лайков у всех цитат
+	// Шаг 1: Обнуляем счетчики лайков у всех цитат
 	updateQuery := `
 		UPDATE quotes 
 		SET likes_count = 0, updated_at = $1
@@ -390,14 +394,15 @@ func (r *quoteRepository) ResetLikes() error {
 		return fmt.Errorf("failed to reset likes count: %w", err)
 	}
 
-	// Удаляем все записи из таблицы likes
+	// Шаг 2: Удаляем все записи из таблицы likes (включая информацию о пользователях)
+	// Это удаляет все записи о том, кто и когда лайкал цитаты
 	deleteQuery := `DELETE FROM likes`
 	_, err = tx.Exec(deleteQuery)
 	if err != nil {
-		return fmt.Errorf("failed to delete likes: %w", err)
+		return fmt.Errorf("failed to delete likes records: %w", err)
 	}
 
-	// Коммитим транзакцию
+	// Коммитим транзакцию - все изменения применяются атомарно
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
