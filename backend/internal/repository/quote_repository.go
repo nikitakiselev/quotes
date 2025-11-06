@@ -17,7 +17,8 @@ type QuoteRepository interface {
 	Create(quote *models.Quote) error
 	Update(id string, quote *models.Quote) error
 	Delete(id string) error
-	Like(id string) error
+	Like(id string, userIP, userAgent string) error
+	IsLiked(id string, userIP string) (bool, error)
 	GetTopWeekly() (*models.Quote, error)
 	GetTopAllTime() (*models.Quote, error)
 }
@@ -224,16 +225,40 @@ func (r *quoteRepository) Delete(id string) error {
 }
 
 // Like увеличивает количество лайков у цитаты
-func (r *quoteRepository) Like(id string) error {
-	query := `
+// userIP и userAgent используются для предотвращения множественных лайков
+func (r *quoteRepository) Like(id string, userIP, userAgent string) error {
+	// Проверяем, не лайкал ли уже этот пользователь эту цитату
+	checkQuery := `
+		SELECT id FROM likes 
+		WHERE quote_id = $1 AND user_ip = $2
+	`
+	var existingLikeID string
+	err := r.db.QueryRow(checkQuery, id, userIP).Scan(&existingLikeID)
+	
+	if err == nil {
+		// Лайк уже существует, возвращаем ошибку
+		return fmt.Errorf("you have already liked this quote")
+	}
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check existing like: %w", err)
+	}
+
+	// Начинаем транзакцию
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Увеличиваем счетчик лайков
+	updateQuery := `
 		UPDATE quotes 
 		SET likes_count = likes_count + 1, updated_at = $1
 		WHERE id = $2
 	`
-
-	result, err := r.db.Exec(query, time.Now(), id)
+	result, err := tx.Exec(updateQuery, time.Now(), id)
 	if err != nil {
-		return fmt.Errorf("failed to like quote: %w", err)
+		return fmt.Errorf("failed to update likes count: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -245,7 +270,35 @@ func (r *quoteRepository) Like(id string) error {
 		return fmt.Errorf("quote not found")
 	}
 
+	// Сохраняем информацию о лайке
+	likeID := fmt.Sprintf("%s-%s", id, userIP)
+	insertQuery := `
+		INSERT INTO likes (id, quote_id, user_ip, user_agent, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (quote_id, user_ip) DO NOTHING
+	`
+	_, err = tx.Exec(insertQuery, likeID, id, userIP, userAgent, time.Now())
+	if err != nil {
+		return fmt.Errorf("failed to save like: %w", err)
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return nil
+}
+
+// IsLiked проверяет, лайкнул ли пользователь цитату
+func (r *quoteRepository) IsLiked(id string, userIP string) (bool, error) {
+	query := `SELECT COUNT(*) FROM likes WHERE quote_id = $1 AND user_ip = $2`
+	var count int
+	err := r.db.QueryRow(query, id, userIP).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("failed to check like status: %w", err)
+	}
+	return count > 0, nil
 }
 
 // GetTopWeekly возвращает цитату с наибольшим количеством лайков за последнюю неделю

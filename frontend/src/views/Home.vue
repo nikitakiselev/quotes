@@ -167,14 +167,8 @@ const handleLike = async () => {
   const liked = getLikedQuotes()
   const wasLiked = liked.has(quote.value.id)
 
-  // Если уже лайкнута, снимаем лайк (только визуально, на сервере не уменьшаем)
+  // Если уже лайкнута локально, не пытаемся ставить лайк снова
   if (wasLiked) {
-    liked.delete(quote.value.id)
-    saveLikedQuotes(liked)
-    // Обновляем локально, уменьшая счетчик
-    if (quote.value.likes_count > 0) {
-      quote.value.likes_count--
-    }
     return
   }
 
@@ -192,9 +186,25 @@ const handleLike = async () => {
     setTimeout(() => {
       likeAnimating.value = false
     }, 600)
-  } catch (err) {
-    console.error('Error liking quote:', err)
-    error.value = 'Не удалось поставить лайк'
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
+    const errorMessage = error?.response?.data?.error || error?.message || 'Не удалось поставить лайк'
+    
+    // Если ошибка "уже лайкнуто", просто обновляем локальное состояние
+    if (errorMessage.includes('уже') || errorMessage.includes('already')) {
+      liked.add(quote.value.id)
+      saveLikedQuotes(liked)
+      // Обновляем цитату, чтобы получить актуальный счетчик
+      try {
+        const updatedQuote = await quotesApi.getById(quote.value.id)
+        quote.value = updatedQuote
+      } catch {
+        // Игнорируем ошибку обновления
+      }
+    } else {
+      error.value = errorMessage
+    }
+    likeAnimating.value = false
   }
 }
 

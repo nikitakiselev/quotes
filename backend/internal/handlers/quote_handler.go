@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"quotes-backend/internal/models"
 	"quotes-backend/internal/repository"
@@ -213,19 +214,37 @@ func (h *QuoteHandler) Delete(c *gin.Context) {
 
 // Like ставит лайк цитате
 // @Summary Поставить лайк цитате
-// @Description Увеличивает количество лайков у цитаты на 1
+// @Description Увеличивает количество лайков у цитаты на 1. Предотвращает множественные лайки от одного пользователя
 // @Tags quotes
 // @Accept json
 // @Produce json
 // @Param id path string true "ID цитаты"
 // @Success 200 {object} models.QuoteResponse
+// @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/quotes/{id}/like [put]
 func (h *QuoteHandler) Like(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.repo.Like(id); err != nil {
+	// Получаем IP адрес пользователя
+	userIP := c.ClientIP()
+	// Если за прокси, пытаемся получить реальный IP
+	if forwarded := c.GetHeader("X-Forwarded-For"); forwarded != "" {
+		// Берем первый IP из списка
+		if ips := strings.Split(forwarded, ","); len(ips) > 0 {
+			userIP = strings.TrimSpace(ips[0])
+		}
+	}
+	
+	userAgent := c.GetHeader("User-Agent")
+
+	if err := h.repo.Like(id, userIP, userAgent); err != nil {
+		// Проверяем, это ошибка "уже лайкнуто" или другая
+		if strings.Contains(err.Error(), "already liked") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Вы уже поставили лайк этой цитате"})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
