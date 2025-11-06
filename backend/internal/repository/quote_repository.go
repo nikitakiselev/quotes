@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"quotes-backend/internal/models"
+
+	"github.com/google/uuid"
 )
 
 // QuoteRepository определяет интерфейс для работы с цитатами
@@ -271,7 +273,7 @@ func (r *quoteRepository) Like(id string, userIP, userAgent string) error {
 	}
 
 	// Сохраняем информацию о лайке
-	likeID := fmt.Sprintf("%s-%s", id, userIP)
+	likeID := uuid.New().String()
 	insertQuery := `
 		INSERT INTO likes (id, quote_id, user_ip, user_agent, created_at)
 		VALUES ($1, $2, $3, $4, $5)

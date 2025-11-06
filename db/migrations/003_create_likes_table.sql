@@ -8,6 +8,17 @@ CREATE TABLE IF NOT EXISTS likes (
     UNIQUE(quote_id, user_ip)
 );
 
+-- Если таблица уже существует, добавляем уникальное ограничение отдельно
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'likes_quote_id_user_ip_key'
+    ) THEN
+        ALTER TABLE likes ADD CONSTRAINT likes_quote_id_user_ip_key UNIQUE (quote_id, user_ip);
+    END IF;
+END $$;
+
 -- Создание индекса для быстрого поиска
 CREATE INDEX IF NOT EXISTS idx_likes_quote_id ON likes(quote_id);
 CREATE INDEX IF NOT EXISTS idx_likes_user_ip ON likes(user_ip);
