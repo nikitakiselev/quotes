@@ -20,18 +20,23 @@
       </div>
 
       <!-- Цитата -->
-      <div 
-        v-if="quote" 
-        class="mb-8"
-      >
-        <blockquote 
-          :class="['font-light leading-tight text-apple-dark mb-8 text-balance', quoteClass]"
-        >
-          "{{ quote.text }}"
-        </blockquote>
-        <p class="text-xl md:text-2xl text-gray-600 font-light">
-          — {{ quote.author }}
-        </p>
+      <div class="mb-8 min-h-[300px] flex items-center justify-center">
+        <Transition name="quote" mode="out-in">
+          <div 
+            v-if="quote" 
+            :key="quote.id"
+            class="w-full"
+          >
+            <blockquote 
+              :class="['font-light leading-tight text-apple-dark mb-8 text-balance', quoteClass]"
+            >
+              "{{ quote.text }}"
+            </blockquote>
+            <p class="text-xl md:text-2xl text-gray-600 font-light">
+              — {{ quote.author }}
+            </p>
+          </div>
+        </Transition>
       </div>
 
       <!-- Загрузка - поверх всей страницы -->
@@ -348,6 +353,25 @@ watch(() => route.params.id, (newId, oldId) => {
 .loader-enter-from,
 .loader-leave-to {
   opacity: 0;
+}
+
+/* Анимация появления цитаты */
+.quote-enter-active {
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.quote-leave-active {
+  transition: opacity 0.3s ease-in, transform 0.3s ease-in;
+}
+
+.quote-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.quote-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
 
