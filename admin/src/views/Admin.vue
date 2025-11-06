@@ -155,6 +155,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import Swal from 'sweetalert2'
 import { quotesApi, type Quote, type CreateQuoteRequest, type UpdateQuoteRequest } from '@/api/client'
 
 const router = useRouter()
@@ -189,7 +190,12 @@ const loadQuotes = async () => {
     totalPages.value = response.total_pages
   } catch (err) {
     console.error('Error loading quotes:', err)
-    alert('Не удалось загрузить цитаты')
+    await Swal.fire({
+      icon: 'error',
+      title: 'Ошибка',
+      text: 'Не удалось загрузить цитаты',
+      confirmButtonText: 'OK',
+    })
   } finally {
     loading.value = false
   }
@@ -200,15 +206,34 @@ const handleSubmit = async () => {
   try {
     if (editingQuote.value) {
       await quotesApi.update(editingQuote.value.id, form.value as UpdateQuoteRequest)
+      await Swal.fire({
+        icon: 'success',
+        title: 'Успешно!',
+        text: 'Цитата обновлена',
+        timer: 2000,
+        showConfirmButton: false,
+      })
     } else {
       await quotesApi.create(form.value)
+      await Swal.fire({
+        icon: 'success',
+        title: 'Успешно!',
+        text: 'Цитата добавлена',
+        timer: 2000,
+        showConfirmButton: false,
+      })
     }
     form.value = { text: '', author: '' }
     editingQuote.value = null
     await loadQuotes()
   } catch (err) {
     console.error('Error saving quote:', err)
-    alert('Не удалось сохранить цитату')
+    await Swal.fire({
+      icon: 'error',
+      title: 'Ошибка',
+      text: 'Не удалось сохранить цитату',
+      confirmButtonText: 'OK',
+    })
   } finally {
     submitting.value = false
   }
@@ -229,16 +254,39 @@ const cancelEdit = () => {
 }
 
 const deleteQuote = async (id: string) => {
-  if (!confirm('Вы уверены, что хотите удалить эту цитату?')) {
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Удаление цитаты',
+    text: 'Вы уверены, что хотите удалить эту цитату?',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Да, удалить',
+    cancelButtonText: 'Отмена',
+  })
+
+  if (!result.isConfirmed) {
     return
   }
 
   try {
     await quotesApi.delete(id)
+    await Swal.fire({
+      icon: 'success',
+      title: 'Удалено!',
+      text: 'Цитата успешно удалена',
+      timer: 2000,
+      showConfirmButton: false,
+    })
     await loadQuotes()
   } catch (err) {
     console.error('Error deleting quote:', err)
-    alert('Не удалось удалить цитату')
+    await Swal.fire({
+      icon: 'error',
+      title: 'Ошибка',
+      text: 'Не удалось удалить цитату',
+      confirmButtonText: 'OK',
+    })
   }
 }
 
