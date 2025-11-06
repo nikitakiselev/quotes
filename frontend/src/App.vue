@@ -1,5 +1,7 @@
 <template>
-  <router-view />
+  <div class="h-full overflow-auto">
+    <router-view />
+  </div>
 </template>
 
 <script setup lang="ts">

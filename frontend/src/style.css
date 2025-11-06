@@ -7,10 +7,21 @@
     @apply antialiased;
   }
 
-  body {
+  html, body {
     @apply bg-white text-apple-dark font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+    height: 100dvh; /* Dynamic viewport height для мобильных */
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
+  #app {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
   }
 }
 
