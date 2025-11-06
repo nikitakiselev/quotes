@@ -8,11 +8,12 @@ import (
 
 // Quote представляет цитату в системе
 type Quote struct {
-	ID        string    `json:"id" db:"id"`
-	Text      string    `json:"text" db:"text"`
-	Author    string    `json:"author" db:"author"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID         string    `json:"id" db:"id"`
+	Text       string    `json:"text" db:"text"`
+	Author     string    `json:"author" db:"author"`
+	LikesCount int       `json:"likes_count" db:"likes_count"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // CreateQuoteRequest представляет запрос на создание цитаты
@@ -29,11 +30,12 @@ type UpdateQuoteRequest struct {
 
 // QuoteResponse представляет ответ API с цитатой
 type QuoteResponse struct {
-	ID        string    `json:"id"`
-	Text      string    `json:"text"`
-	Author    string    `json:"author"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         string    `json:"id"`
+	Text       string    `json:"text"`
+	Author     string    `json:"author"`
+	LikesCount int       `json:"likes_count"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // PaginatedQuotesResponse представляет ответ API с пагинацией
@@ -48,11 +50,12 @@ type PaginatedQuotesResponse struct {
 // ToResponse преобразует Quote в QuoteResponse
 func (q *Quote) ToResponse() QuoteResponse {
 	return QuoteResponse{
-		ID:        q.ID,
-		Text:      q.Text,
-		Author:    q.Author,
-		CreatedAt: q.CreatedAt,
-		UpdatedAt: q.UpdatedAt,
+		ID:         q.ID,
+		Text:       q.Text,
+		Author:     q.Author,
+		LikesCount: q.LikesCount,
+		CreatedAt:  q.CreatedAt,
+		UpdatedAt:  q.UpdatedAt,
 	}
 }
 

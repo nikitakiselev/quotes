@@ -211,3 +211,72 @@ func (h *QuoteHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// Like ставит лайк цитате
+// @Summary Поставить лайк цитате
+// @Description Увеличивает количество лайков у цитаты на 1
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Param id path string true "ID цитаты"
+// @Success 200 {object} models.QuoteResponse
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/quotes/{id}/like [put]
+func (h *QuoteHandler) Like(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := h.repo.Like(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Получаем обновленную цитату
+	quote, err := h.repo.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, quote.ToResponse())
+}
+
+// GetTopWeekly возвращает топ цитату за неделю
+// @Summary Получить топ цитату за неделю
+// @Description Возвращает цитату с наибольшим количеством лайков за последние 7 дней
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.QuoteResponse
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/quotes/top/weekly [get]
+func (h *QuoteHandler) GetTopWeekly(c *gin.Context) {
+	quote, err := h.repo.GetTopWeekly()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, quote.ToResponse())
+}
+
+// GetTopAllTime возвращает топ цитату за всё время
+// @Summary Получить топ цитату за всё время
+// @Description Возвращает цитату с наибольшим количеством лайков за всё время
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.QuoteResponse
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/quotes/top/alltime [get]
+func (h *QuoteHandler) GetTopAllTime(c *gin.Context) {
+	quote, err := h.repo.GetTopAllTime()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, quote.ToResponse())
+}
+

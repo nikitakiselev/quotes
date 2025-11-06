@@ -31,6 +31,7 @@ export interface Quote {
   id: string
   text: string
   author: string
+  likes_count: number
   created_at: string
   updated_at: string
 }
@@ -95,6 +96,24 @@ export const quotesApi = {
   // Удалить цитату
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/quotes/${id}`)
+  },
+
+  // Поставить лайк цитате
+  like: async (id: string): Promise<Quote> => {
+    const response = await apiClient.put<Quote>(`/quotes/${id}/like`)
+    return response.data
+  },
+
+  // Получить топ цитату за неделю
+  getTopWeekly: async (): Promise<Quote> => {
+    const response = await apiClient.get<Quote>('/quotes/top/weekly')
+    return response.data
+  },
+
+  // Получить топ цитату за всё время
+  getTopAllTime: async (): Promise<Quote> => {
+    const response = await apiClient.get<Quote>('/quotes/top/alltime')
+    return response.data
   },
 }
 

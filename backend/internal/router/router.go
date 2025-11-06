@@ -44,6 +44,9 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 			quotes.POST("", quoteHandler.Create)
 			quotes.PUT("/:id", quoteHandler.Update)
 			quotes.DELETE("/:id", quoteHandler.Delete)
+			quotes.PUT("/:id/like", quoteHandler.Like)
+			quotes.GET("/top/weekly", quoteHandler.GetTopWeekly)
+			quotes.GET("/top/alltime", quoteHandler.GetTopAllTime)
 		}
 	}
 

@@ -17,6 +17,9 @@ type QuoteRepository interface {
 	Create(quote *models.Quote) error
 	Update(id string, quote *models.Quote) error
 	Delete(id string) error
+	Like(id string) error
+	GetTopWeekly() (*models.Quote, error)
+	GetTopAllTime() (*models.Quote, error)
 }
 
 type quoteRepository struct {
@@ -31,7 +34,7 @@ func NewQuoteRepository(db *sql.DB) QuoteRepository {
 // GetRandom возвращает случайную цитату
 func (r *quoteRepository) GetRandom() (*models.Quote, error) {
 	query := `
-		SELECT id, text, author, created_at, updated_at 
+		SELECT id, text, author, likes_count, created_at, updated_at 
 		FROM quotes 
 		ORDER BY RANDOM() 
 		LIMIT 1
@@ -42,6 +45,7 @@ func (r *quoteRepository) GetRandom() (*models.Quote, error) {
 		&quote.ID,
 		&quote.Text,
 		&quote.Author,
+		&quote.LikesCount,
 		&quote.CreatedAt,
 		&quote.UpdatedAt,
 	)
@@ -76,7 +80,7 @@ func (r *quoteRepository) GetAll(page, pageSize int, search string) ([]models.Qu
 	// Получение цитат с пагинацией
 	offset := (page - 1) * pageSize
 	query := `
-		SELECT id, text, author, created_at, updated_at 
+		SELECT id, text, author, likes_count, created_at, updated_at 
 		FROM quotes
 	`
 
@@ -102,6 +106,7 @@ func (r *quoteRepository) GetAll(page, pageSize int, search string) ([]models.Qu
 			&quote.ID,
 			&quote.Text,
 			&quote.Author,
+			&quote.LikesCount,
 			&quote.CreatedAt,
 			&quote.UpdatedAt,
 		); err != nil {
@@ -116,7 +121,7 @@ func (r *quoteRepository) GetAll(page, pageSize int, search string) ([]models.Qu
 // GetByID возвращает цитату по ID
 func (r *quoteRepository) GetByID(id string) (*models.Quote, error) {
 	query := `
-		SELECT id, text, author, created_at, updated_at 
+		SELECT id, text, author, likes_count, created_at, updated_at 
 		FROM quotes 
 		WHERE id = $1
 	`
@@ -126,6 +131,7 @@ func (r *quoteRepository) GetByID(id string) (*models.Quote, error) {
 		&quote.ID,
 		&quote.Text,
 		&quote.Author,
+		&quote.LikesCount,
 		&quote.CreatedAt,
 		&quote.UpdatedAt,
 	)
@@ -143,19 +149,21 @@ func (r *quoteRepository) GetByID(id string) (*models.Quote, error) {
 // Create создает новую цитату
 func (r *quoteRepository) Create(quote *models.Quote) error {
 	query := `
-		INSERT INTO quotes (id, text, author, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO quotes (id, text, author, likes_count, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
 	now := time.Now()
 	quote.CreatedAt = now
 	quote.UpdatedAt = now
+	quote.LikesCount = 0
 
 	_, err := r.db.Exec(
 		query,
 		quote.ID,
 		quote.Text,
 		quote.Author,
+		quote.LikesCount,
 		quote.CreatedAt,
 		quote.UpdatedAt,
 	)
@@ -213,6 +221,90 @@ func (r *quoteRepository) Delete(id string) error {
 	}
 
 	return nil
+}
+
+// Like увеличивает количество лайков у цитаты
+func (r *quoteRepository) Like(id string) error {
+	query := `
+		UPDATE quotes 
+		SET likes_count = likes_count + 1, updated_at = $1
+		WHERE id = $2
+	`
+
+	result, err := r.db.Exec(query, time.Now(), id)
+	if err != nil {
+		return fmt.Errorf("failed to like quote: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("quote not found")
+	}
+
+	return nil
+}
+
+// GetTopWeekly возвращает цитату с наибольшим количеством лайков за последнюю неделю
+func (r *quoteRepository) GetTopWeekly() (*models.Quote, error) {
+	query := `
+		SELECT id, text, author, likes_count, created_at, updated_at 
+		FROM quotes 
+		WHERE created_at >= NOW() - INTERVAL '7 days'
+		ORDER BY likes_count DESC, created_at DESC
+		LIMIT 1
+	`
+
+	var quote models.Quote
+	err := r.db.QueryRow(query).Scan(
+		&quote.ID,
+		&quote.Text,
+		&quote.Author,
+		&quote.LikesCount,
+		&quote.CreatedAt,
+		&quote.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("no quotes found for the last week")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get top weekly quote: %w", err)
+	}
+
+	return &quote, nil
+}
+
+// GetTopAllTime возвращает цитату с наибольшим количеством лайков за всё время
+func (r *quoteRepository) GetTopAllTime() (*models.Quote, error) {
+	query := `
+		SELECT id, text, author, likes_count, created_at, updated_at 
+		FROM quotes 
+		ORDER BY likes_count DESC, created_at DESC
+		LIMIT 1
+	`
+
+	var quote models.Quote
+	err := r.db.QueryRow(query).Scan(
+		&quote.ID,
+		&quote.Text,
+		&quote.Author,
+		&quote.LikesCount,
+		&quote.CreatedAt,
+		&quote.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("no quotes found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get top all time quote: %w", err)
+	}
+
+	return &quote, nil
 }
 
 // CalculateTotalPages вычисляет общее количество страниц
