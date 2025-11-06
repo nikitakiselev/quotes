@@ -90,7 +90,7 @@
             isSpacePressed ? 'bg-gray-700 scale-95' : 'bg-apple-dark hover:bg-gray-800'
           ]"
         >
-          <span>{{ loading ? 'Загрузка...' : 'Следующая цитата' }}</span>
+          <span>Следующая цитата</span>
           <!-- Kbd компонент - только для десктопа -->
           <kbd class="hidden md:inline-flex items-center justify-center bg-white border border-gray-300 rounded shadow-sm">
             <svg
