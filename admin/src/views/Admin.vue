@@ -6,12 +6,20 @@
         <div>
           <h1 class="text-4xl font-light text-apple-dark mb-2">Административная панель</h1>
         </div>
-        <button
-          @click="handleLogout"
-          class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-        >
-          Выйти
-        </button>
+        <div class="flex gap-3">
+          <button
+            @click="handleResetLikes"
+            class="px-4 py-2 text-sm bg-red-50 text-red-600 border border-red-200 rounded-lg font-medium hover:bg-red-100 hover:border-red-300 transition-colors"
+          >
+            Сбросить лайки
+          </button>
+          <button
+            @click="handleLogout"
+            class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          >
+            Выйти
+          </button>
+        </div>
       </div>
 
       <!-- Форма добавления/редактирования -->
@@ -79,18 +87,19 @@
               <tr>
                 <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">Текст</th>
                 <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">Автор</th>
+                <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">Лайки</th>
                 <th class="px-6 py-4 text-left text-sm font-medium text-gray-700">Дата создания</th>
                 <th class="px-6 py-4 text-right text-sm font-medium text-gray-700">Действия</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr v-if="loading" class="text-center">
-                <td colspan="4" class="px-6 py-12">
+                <td colspan="5" class="px-6 py-12">
                   <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-apple-dark"></div>
                 </td>
               </tr>
               <tr v-else-if="quotes.length === 0" class="text-center">
-                <td colspan="4" class="px-6 py-12 text-gray-500">
+                <td colspan="5" class="px-6 py-12 text-gray-500">
                   Цитаты не найдены
                 </td>
               </tr>
@@ -101,6 +110,12 @@
                   </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700">{{ quote.author }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  <span class="inline-flex items-center gap-1">
+                    <span>❤️</span>
+                    <span>{{ quote.likes_count || 0 }}</span>
+                  </span>
+                </td>
                 <td class="px-6 py-4 text-sm text-gray-500">
                   {{ new Date(quote.created_at).toLocaleDateString('ru-RU') }}
                 </td>
@@ -179,6 +194,43 @@ let searchTimeout: ReturnType<typeof setTimeout>
 const handleLogout = () => {
   localStorage.removeItem('admin_authenticated')
   router.push('/login')
+}
+
+const handleResetLikes = async () => {
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Сброс лайков',
+    text: 'Вы уверены, что хотите сбросить все лайки? Это действие нельзя отменить.',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Да, сбросить',
+    cancelButtonText: 'Отмена',
+  })
+
+  if (!result.isConfirmed) {
+    return
+  }
+
+  try {
+    await quotesApi.resetLikes()
+    await Swal.fire({
+      icon: 'success',
+      title: 'Успешно!',
+      text: 'Все лайки сброшены',
+      timer: 2000,
+      showConfirmButton: false,
+    })
+    await loadQuotes()
+  } catch (err) {
+    console.error('Error resetting likes:', err)
+    await Swal.fire({
+      icon: 'error',
+      title: 'Ошибка',
+      text: 'Не удалось сбросить лайки',
+      confirmButtonText: 'OK',
+    })
+  }
 }
 
 const loadQuotes = async () => {

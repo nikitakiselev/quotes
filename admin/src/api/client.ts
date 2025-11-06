@@ -17,6 +17,7 @@ export interface Quote {
   id: string
   text: string
   author: string
+  likes_count: number
   created_at: string
   updated_at: string
 }
@@ -70,6 +71,10 @@ export const quotesApi = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/quotes/${id}`)
+  },
+
+  resetLikes: async (): Promise<void> => {
+    await apiClient.delete('/quotes/likes/reset')
   },
 }
 

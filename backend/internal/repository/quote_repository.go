@@ -23,6 +23,7 @@ type QuoteRepository interface {
 	IsLiked(id string, userIP string) (bool, error)
 	GetTopWeekly() (*models.Quote, error)
 	GetTopAllTime() (*models.Quote, error)
+	ResetLikes() error
 }
 
 type quoteRepository struct {
@@ -228,14 +229,28 @@ func (r *quoteRepository) Delete(id string) error {
 
 // Like увеличивает количество лайков у цитаты
 // userIP и userAgent используются для предотвращения множественных лайков
+// Защита от накрутки работает на нескольких уровнях:
+// 1. Проверка существующего лайка перед транзакцией
+// 2. Уникальное ограничение UNIQUE(quote_id, user_ip) в таблице likes
+// 3. ON CONFLICT DO NOTHING в INSERT для предотвращения дубликатов
+// 4. Транзакция обеспечивает атомарность операции
+// Это защищает от накрутки даже при прямых HTTP запросах
 func (r *quoteRepository) Like(id string, userIP, userAgent string) error {
-	// Проверяем, не лайкал ли уже этот пользователь эту цитату
+	// Начинаем транзакцию сразу для изоляции
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Проверяем, не лайкал ли уже этот пользователь эту цитату (внутри транзакции)
 	checkQuery := `
 		SELECT id FROM likes 
 		WHERE quote_id = $1 AND user_ip = $2
+		FOR UPDATE
 	`
 	var existingLikeID string
-	err := r.db.QueryRow(checkQuery, id, userIP).Scan(&existingLikeID)
+	err = tx.QueryRow(checkQuery, id, userIP).Scan(&existingLikeID)
 	
 	if err == nil {
 		// Лайк уже существует, возвращаем ошибку
@@ -244,13 +259,6 @@ func (r *quoteRepository) Like(id string, userIP, userAgent string) error {
 	if err != sql.ErrNoRows {
 		return fmt.Errorf("failed to check existing like: %w", err)
 	}
-
-	// Начинаем транзакцию
-	tx, err := r.db.Begin()
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback()
 
 	// Увеличиваем счетчик лайков
 	updateQuery := `
@@ -273,6 +281,7 @@ func (r *quoteRepository) Like(id string, userIP, userAgent string) error {
 	}
 
 	// Сохраняем информацию о лайке
+	// ON CONFLICT DO NOTHING - дополнительная защита от race condition
 	likeID := uuid.New().String()
 	insertQuery := `
 		INSERT INTO likes (id, quote_id, user_ip, user_agent, created_at)
@@ -360,6 +369,40 @@ func (r *quoteRepository) GetTopAllTime() (*models.Quote, error) {
 	}
 
 	return &quote, nil
+}
+
+// ResetLikes сбрасывает все лайки: обнуляет счетчики и удаляет записи из таблицы likes
+func (r *quoteRepository) ResetLikes() error {
+	// Начинаем транзакцию
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Обнуляем счетчики лайков у всех цитат
+	updateQuery := `
+		UPDATE quotes 
+		SET likes_count = 0, updated_at = $1
+	`
+	_, err = tx.Exec(updateQuery, time.Now())
+	if err != nil {
+		return fmt.Errorf("failed to reset likes count: %w", err)
+	}
+
+	// Удаляем все записи из таблицы likes
+	deleteQuery := `DELETE FROM likes`
+	_, err = tx.Exec(deleteQuery)
+	if err != nil {
+		return fmt.Errorf("failed to delete likes: %w", err)
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }
 
 // CalculateTotalPages вычисляет общее количество страниц

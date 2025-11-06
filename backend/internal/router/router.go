@@ -42,6 +42,7 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 			quotes.GET("/random", quoteHandler.GetRandom)
 			quotes.GET("/top/weekly", quoteHandler.GetTopWeekly)
 			quotes.GET("/top/alltime", quoteHandler.GetTopAllTime)
+			quotes.DELETE("/likes/reset", quoteHandler.ResetLikes)
 			quotes.GET("", quoteHandler.GetAll)
 			quotes.POST("", quoteHandler.Create)
 			// Параметризованные роуты в конце

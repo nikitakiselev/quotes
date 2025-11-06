@@ -299,3 +299,21 @@ func (h *QuoteHandler) GetTopAllTime(c *gin.Context) {
 	c.JSON(http.StatusOK, quote.ToResponse())
 }
 
+// ResetLikes сбрасывает все лайки
+// @Summary Сбросить все лайки
+// @Description Обнуляет счетчики лайков у всех цитат и удаляет все записи о лайках
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/quotes/likes/reset [delete]
+func (h *QuoteHandler) ResetLikes(c *gin.Context) {
+	if err := h.repo.ResetLikes(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Все лайки успешно сброшены"})
+}
+
