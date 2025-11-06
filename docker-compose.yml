@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: quotes_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-quotes_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-quotes_password}
+      POSTGRES_DB: ${DB_NAME:-quotes_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-quotes_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quotes_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+      args:
+        # Для локальной разработки используем относительный путь (тот же домен)
+        # Для production оставляем пустым
+        - VITE_API_URL=${VITE_API_URL:-}
+    container_name: quotes_backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-quotes_user}
+      DB_PASSWORD: ${DB_PASSWORD:-quotes_password}
+      DB_NAME: ${DB_NAME:-quotes_db}
+      DB_SSLMODE: disable
+      API_PORT: ${API_PORT:-8080}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      MIGRATIONS_DIR: /app/db/migrations
+      STATIC_DIR: /app/frontend/dist
+    ports:
+      - "${FRONTEND_PORT:-3000}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db:/app/db
+    networks:
+      - quotes_network
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      args:
+        # Используем тот же backend, что и основной сайт
+        # В production оставляем пустым для относительных путей
+        - VITE_API_URL=${ADMIN_API_URL:-}
+        - VITE_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+    container_name: quotes_admin
+    ports:
+      - "${ADMIN_PORT:-3001}:80"
+    depends_on:
+      - backend
+    networks:
+      - quotes_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  quotes_network:
+    driver: bridge
+
