@@ -81,9 +81,13 @@
         <button
           @click="loadRandomQuote"
           :disabled="loading"
-          class="px-5 sm:px-8 py-2.5 sm:py-3 bg-apple-dark text-white rounded-full font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm"
+          class="px-5 sm:px-8 py-2.5 sm:py-3 bg-apple-dark text-white rounded-full font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2"
         >
-          {{ loading ? 'Загрузка...' : 'Следующая цитата' }}
+          <span>{{ loading ? 'Загрузка...' : 'Следующая цитата' }}</span>
+          <!-- Kbd компонент - только для десктопа -->
+          <kbd class="hidden md:inline-flex items-center justify-center min-w-[60px] px-3 py-1.5 text-[10px] font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm">
+            <span class="text-gray-500">Space</span>
+          </kbd>
         </button>
       </div>
     </div>
@@ -91,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { quotesApi, type Quote } from '@/api/client'
 
@@ -261,6 +265,28 @@ const handleLike = async () => {
   }
 }
 
+// Обработчик нажатия клавиши пробела
+const handleKeyDown = (event: KeyboardEvent) => {
+  // Игнорируем, если пользователь вводит текст в поле ввода
+  if (
+    event.target instanceof HTMLInputElement ||
+    event.target instanceof HTMLTextAreaElement ||
+    event.target instanceof HTMLSelectElement
+  ) {
+    return
+  }
+
+  // Обрабатываем только пробел
+  if (event.code === 'Space' || event.key === ' ') {
+    // Предотвращаем прокрутку страницы при нажатии пробела
+    event.preventDefault()
+    
+    // Загружаем случайную цитату только если не идет загрузка
+    if (!loading.value) {
+      loadRandomQuote()
+    }
+  }
+}
 
 // Загружаем цитату при монтировании или изменении ID в URL
 onMounted(() => {
@@ -270,6 +296,14 @@ onMounted(() => {
   } else {
     loadRandomQuote()
   }
+
+  // Добавляем обработчик нажатия клавиш
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+// Удаляем обработчик при размонтировании
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
 })
 
 // Отслеживаем изменения ID в URL
