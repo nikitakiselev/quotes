@@ -85,10 +85,10 @@
         >
           <span>{{ loading ? 'Загрузка...' : 'Следующая цитата' }}</span>
           <!-- Kbd компонент - только для десктопа -->
-          <kbd class="hidden md:inline-flex items-center justify-center w-8 h-5 px-1.5 bg-white border border-gray-300 rounded shadow-sm">
+          <kbd class="hidden md:inline-flex items-center justify-center min-w-[44px] h-6 px-2 bg-white border border-gray-300 rounded shadow-sm">
             <svg
-              width="20"
-              height="9"
+              width="36"
+              height="16"
               viewBox="0 0 122.88 54.99"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
