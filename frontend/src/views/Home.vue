@@ -84,10 +84,12 @@
         <!-- Кнопка обновления -->
         <button
           @click="loadRandomQuote"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
           :disabled="loading"
           :class="[
-            'px-5 sm:px-8 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2',
-            isSpacePressed ? 'bg-gray-700 scale-95' : 'bg-apple-dark hover:bg-gray-800'
+            'px-5 sm:px-8 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-apple-dark focus:ring-offset-2 shadow-sm flex items-center gap-2 select-none touch-manipulation',
+            isSpacePressed || isTouching ? 'bg-gray-700 scale-95' : 'bg-apple-dark hover:bg-gray-800 active:bg-gray-700 active:scale-95'
           ]"
         >
           <span>Следующая цитата</span>
@@ -216,6 +218,7 @@ const error = ref<string | null>(null)
 const likeAnimating = ref(false)
 const isUpdatingUrl = ref(false) // Флаг для предотвращения повторной загрузки при программном обновлении URL
 const isSpacePressed = ref(false) // Флаг для отслеживания нажатия пробела
+const isTouching = ref(false) // Флаг для отслеживания тач-событий
 const showHotkeysModal = ref(false) // Флаг для отображения модального окна с хоткеями
 let loaderTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -372,6 +375,17 @@ const handleLike = async () => {
     }
     likeAnimating.value = false
   }
+}
+
+// Обработчики тач-событий для кнопки
+const handleTouchStart = () => {
+  if (!loading.value) {
+    isTouching.value = true
+  }
+}
+
+const handleTouchEnd = () => {
+  isTouching.value = false
 }
 
 // Обработчик нажатия клавиши пробела (для визуальной обратной связи)
@@ -534,6 +548,13 @@ watch(() => route.params.id, (newId, oldId) => {
 .modal-leave-to .bg-white {
   opacity: 0;
   transform: scale(0.95) translateY(-10px);
+}
+
+/* Улучшение отзывчивости на тач-устройствах */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 </style>
 
