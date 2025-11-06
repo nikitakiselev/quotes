@@ -60,21 +60,32 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 
 	// Проверяем существование директории со статикой
 	if _, err := os.Stat(staticDir); err == nil {
-		// Статические файлы из папки assets (JS, CSS и т.д.)
+		// Статические файлы из папки assets (JS, CSS и т.д.) - кешируем на год
 		assetsPath := filepath.Join(staticDir, "assets")
 		if _, err := os.Stat(assetsPath); err == nil {
-			r.Static("/assets", assetsPath)
+			assets := r.Group("/assets")
+			assets.Use(func(c *gin.Context) {
+				// Кешируем assets на год (они имеют хеши в именах)
+				c.Header("Cache-Control", "public, max-age=31536000, immutable")
+			})
+			assets.Static("/", assetsPath)
 		}
 
 		// Отдельные статические файлы в корне
 		faviconPath := filepath.Join(staticDir, "favicon.ico")
 		if _, err := os.Stat(faviconPath); err == nil {
-			r.StaticFile("/favicon.ico", faviconPath)
+			r.GET("/favicon.ico", func(c *gin.Context) {
+				c.Header("Cache-Control", "public, max-age=86400")
+				c.File(faviconPath)
+			})
 		}
 
 		viteSvgPath := filepath.Join(staticDir, "vite.svg")
 		if _, err := os.Stat(viteSvgPath); err == nil {
-			r.StaticFile("/vite.svg", viteSvgPath)
+			r.GET("/vite.svg", func(c *gin.Context) {
+				c.Header("Cache-Control", "public, max-age=86400")
+				c.File(viteSvgPath)
+			})
 		}
 
 		// SPA routing - все остальные запросы отдаем index.html
@@ -85,9 +96,12 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 				return
 			}
 
-			// Для всех остальных запросов отдаем index.html (SPA routing)
+			// Для index.html НЕ кешируем, чтобы всегда получать свежую версию
 			indexPath := filepath.Join(staticDir, "index.html")
 			if _, err := os.Stat(indexPath); err == nil {
+				c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+				c.Header("Pragma", "no-cache")
+				c.Header("Expires", "0")
 				c.File(indexPath)
 			} else {
 				c.String(http.StatusNotFound, "Frontend not found")

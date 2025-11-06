@@ -7,19 +7,29 @@
     @apply antialiased;
   }
 
-  html, body {
+  html {
+    height: 100%;
+    height: -webkit-fill-available; /* Для Safari */
+    overflow: hidden;
+  }
+
+  body {
     @apply bg-white text-apple-dark font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     height: 100%;
-    height: 100dvh; /* Dynamic viewport height для мобильных */
+    height: -webkit-fill-available; /* Для Safari */
+    height: 100dvh; /* Dynamic viewport height для современных браузеров */
     overflow: hidden;
     position: fixed;
     width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   #app {
     height: 100%;
+    height: -webkit-fill-available;
     height: 100dvh;
     overflow: hidden;
   }
