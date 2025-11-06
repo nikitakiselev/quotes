@@ -25,9 +25,19 @@ if [ ! -d ".git" ]; then
     git clone git@github.com:nikitakiselev/quotes.git .
 fi
 
+# Определение команды docker compose (поддержка обеих версий)
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+elif docker-compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+else
+    echo "❌ Docker Compose не установлен!"
+    exit 1
+fi
+
 # Остановка контейнеров
 echo "⏹️  Остановка контейнеров..."
-docker-compose down
+$DOCKER_COMPOSE down
 
 # Обновление кода из репозитория
 echo "📥 Обновление кода из репозитория..."
@@ -57,23 +67,23 @@ fi
 
 # Сборка образов
 echo "🔨 Сборка Docker образов..."
-docker-compose build --no-cache
+$DOCKER_COMPOSE build --no-cache
 
 # Запуск контейнеров
 echo "▶️  Запуск контейнеров..."
-docker-compose up -d
+$DOCKER_COMPOSE up -d
 
 # Ожидание готовности сервисов
 echo "⏳ Ожидание готовности сервисов..."
-sleep 10
+sleep 15
 
 # Проверка статуса
 echo "✅ Проверка статуса контейнеров..."
-docker-compose ps
+$DOCKER_COMPOSE ps
 
 # Показ логов
 echo "📋 Последние логи..."
-docker-compose logs --tail=50
+$DOCKER_COMPOSE logs --tail=50
 
 echo "✨ Деплой завершен успешно!"
 echo ""
