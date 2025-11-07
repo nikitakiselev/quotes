@@ -1,9 +1,11 @@
 import axios from 'axios'
 
+// Получаем URL API из переменной окружения
 // Если VITE_API_URL не задан, используем относительный путь
-// Для локальной разработки можно задать http://localhost:8080
+// Для локальной разработки можно задать http://localhost:8080 или http://localhost:8081
 const API_URL = import.meta.env.VITE_API_URL || ''
 
+// Создаем API client
 export const apiClient = axios.create({
   baseURL: API_URL ? `${API_URL}/api` : '/api',
   headers: {
@@ -115,6 +117,11 @@ export const quotesApi = {
   getTopAllTime: async (): Promise<Quote> => {
     const response = await apiClient.get<Quote>('/quotes/top/alltime')
     return response.data
+  },
+
+  // Сбросить все лайки
+  resetLikes: async (): Promise<void> => {
+    await apiClient.delete('/quotes/likes/reset')
   },
 }
 

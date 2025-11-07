@@ -1,32 +1,33 @@
+# Этап 1: Сборка фронтенда
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-
-# Аргумент для API URL
-ARG VITE_API_URL=http://localhost:8080
-ENV VITE_API_URL=$VITE_API_URL
 
 # Копирование файлов зависимостей
 COPY package*.json ./
 
 # Установка зависимостей
-RUN npm ci
+RUN npm install
 
 # Копирование исходного кода
 COPY . .
 
-# Сборка приложения
+# Сборка фронтенда
+# VITE_API_URL - URL backend для API запросов
+# Если пусто, используется относительный путь (тот же домен)
+ARG VITE_API_URL=
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-FROM nginx:alpine
+# Этап 2: Caddy для отдачи статики
+FROM caddy:2-alpine
 
-# Копирование собранного приложения
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Копирование собранного фронтенда
+COPY --from=builder /app/dist /usr/share/caddy
 
-# Копирование конфигурации nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Копирование конфигурации Caddy
+COPY Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
-
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

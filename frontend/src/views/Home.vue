@@ -19,6 +19,7 @@
         </button>
       </div>
 
+
       <!-- Цитата -->
       <div class="mb-8 min-h-[300px] flex items-center justify-center">
         <Transition name="quote" mode="out-in">
@@ -492,6 +493,7 @@ watch(() => route.params.id, (newId, oldId) => {
     loadRandomQuote()
   }
 })
+
 </script>
 
 <style scoped>

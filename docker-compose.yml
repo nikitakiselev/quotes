@@ -25,10 +25,6 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-      args:
-        # Для локальной разработки используем относительный путь (тот же домен)
-        # Для production оставляем пустым
-        - VITE_API_URL=${VITE_API_URL:-}
     container_name: quotes_backend
     environment:
       DB_HOST: postgres
@@ -40,14 +36,56 @@ services:
       API_PORT: ${API_PORT:-8080}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       MIGRATIONS_DIR: /app/db/migrations
-      STATIC_DIR: /app/frontend/dist
     ports:
-      - "${FRONTEND_PORT:-3000}:8080"
+      - "${BACKEND_GO_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - ./db:/app/db
+    networks:
+      - quotes_network
+    restart: unless-stopped
+
+  backend_rust:
+    build:
+      context: .
+      dockerfile: ./backend_rust/Dockerfile
+    container_name: quotes_backend_rust
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-quotes_user}
+      DB_PASSWORD: ${DB_PASSWORD:-quotes_password}
+      DB_NAME: ${DB_NAME:-quotes_db}
+      DB_SSLMODE: disable
+      API_PORT: ${API_PORT:-8081}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    ports:
+      - "${BACKEND_RUST_PORT:-8081}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db:/app/db
+    networks:
+      - quotes_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # VITE_API_URL - URL backend для API запросов
+        # Если пусто, используется относительный путь (проксирование через Caddy)
+        # По умолчанию пусто - Caddy будет проксировать /api к backend_rust
+        - VITE_API_URL=${VITE_API_URL:-}
+    container_name: quotes_frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend_rust
     networks:
       - quotes_network
     restart: unless-stopped
@@ -65,7 +103,7 @@ services:
     ports:
       - "${ADMIN_PORT:-3001}:80"
     depends_on:
-      - backend
+      - backend_rust
     networks:
       - quotes_network
     restart: unless-stopped
