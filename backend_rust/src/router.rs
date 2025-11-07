@@ -27,8 +27,9 @@ pub fn setup_router(repo: QuoteRepository, cfg: &Config) -> Router {
             .allow_headers(Any)
             .expose_headers(Any)
     } else {
+        use tower_http::cors::AllowOrigin;
         CorsLayer::new()
-            .allow_origin(cfg.cors_origin.parse().unwrap())
+            .allow_origin(AllowOrigin::exact(cfg.cors_origin.parse::<axum::http::HeaderValue>().unwrap()))
             .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS, Method::PATCH])
             .allow_headers(Any)
             .expose_headers(Any)
