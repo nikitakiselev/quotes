@@ -31,7 +31,7 @@ thiserror = "1.0"
 
 # Fix version for home crate to avoid edition2024 requirement
 [patch.crates-io]
-home = { version = "0.5.11" }
+home = { version = "=0.5.11" }
 
 
 [profile.release]
