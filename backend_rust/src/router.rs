@@ -57,8 +57,9 @@ pub fn setup_router(repo: QuoteRepository, cfg: &Config) -> Router {
     use axum::middleware::Next;
     use axum::response::Response;
     use axum::http::{HeaderValue, Request};
+    use axum::body::Body;
     
-    async fn add_backend_header<B>(req: Request<B>, next: Next) -> Response {
+    async fn add_backend_header(req: Request<Body>, next: Next) -> Response {
         let mut response = next.run(req).await;
         response.headers_mut().insert(
             axum::http::header::HeaderName::from_static("x-backend"),
