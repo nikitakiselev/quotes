@@ -16,6 +16,18 @@ impl QuoteRepository {
 
     /// Возвращает случайную цитату
     pub async fn get_random(&self) -> anyhow::Result<Quote> {
+        use tracing::warn;
+        
+        // Сначала проверяем, есть ли цитаты вообще
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM quotes")
+            .fetch_one(&self.pool)
+            .await?;
+        
+        if count == 0 {
+            warn!("No quotes found in database");
+            return Err(anyhow::anyhow!("no quotes found"));
+        }
+        
         let quote = sqlx::query_as::<_, Quote>(
             "SELECT id, text, author, likes_count, created_at, updated_at 
              FROM quotes 
@@ -25,7 +37,10 @@ impl QuoteRepository {
         .fetch_optional(&self.pool)
         .await?;
 
-        quote.ok_or_else(|| anyhow::anyhow!("no quotes found"))
+        quote.ok_or_else(|| {
+            warn!("Query returned no rows despite count being {}", count);
+            anyhow::anyhow!("no quotes found")
+        })
     }
 
     /// Возвращает все цитаты с пагинацией и поиском
