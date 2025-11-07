@@ -4,6 +4,10 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: quotes_db
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - SYS_ADMIN
     environment:
       POSTGRES_USER: ${DB_USER:-quotes_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-quotes_password}
