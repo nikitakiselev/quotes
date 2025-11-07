@@ -9,8 +9,8 @@ RUN apk add --no-cache \
     linux-headers \
     $PHPIZE_DEPS
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql sockets
+# Install PHP extensions including OPcache
+RUN docker-php-ext-install pdo pdo_pgsql sockets opcache
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -35,8 +35,18 @@ RUN apk add --no-cache \
     postgresql-dev \
     linux-headers \
     $PHPIZE_DEPS \
-    && docker-php-ext-install pdo pdo_pgsql sockets \
+    && docker-php-ext-install pdo pdo_pgsql sockets opcache \
     && apk del $PHPIZE_DEPS
+
+# Configure OPcache for maximum performance
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.interned_strings_buffer=16" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.max_accelerated_files=10000" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.save_comments=0" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.fast_shutdown=1" >> /usr/local/etc/php/conf.d/opcache.ini
 
 # Copy application from builder
 COPY --from=builder /app/vendor /app/vendor

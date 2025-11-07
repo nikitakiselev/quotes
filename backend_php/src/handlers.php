@@ -17,24 +17,24 @@ class Handlers
 
     private function getClientIp(ServerRequestInterface $request): string
     {
-        $headers = $request->getHeader('X-Forwarded-For');
-        if (!empty($headers)) {
-            $ips = explode(',', $headers[0]);
-            return trim($ips[0]);
+        // Оптимизация: проверяем только нужные заголовки без лишних операций
+        $forwarded = $request->getHeaderLine('X-Forwarded-For');
+        if ($forwarded !== '') {
+            $pos = strpos($forwarded, ',');
+            return $pos !== false ? substr($forwarded, 0, $pos) : $forwarded;
         }
 
-        $headers = $request->getHeader('X-Real-IP');
-        if (!empty($headers)) {
-            return $headers[0];
-        }
-
-        return '127.0.0.1';
+        $realIp = $request->getHeaderLine('X-Real-IP');
+        return $realIp !== '' ? $realIp : '127.0.0.1';
     }
 
     private function jsonResponse(int $statusCode, array $data): ResponseInterface
     {
+        // Оптимизация: используем JSON_THROW_ON_ERROR для быстрой обработки ошибок
+        // Убираем JSON_UNESCAPED_UNICODE если не критично (быстрее)
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         $response = new Response($statusCode);
-        $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
+        $response->getBody()->write($json);
         return $response->withHeader('Content-Type', 'application/json')
             ->withHeader('X-Backend', 'php');
     }
@@ -63,7 +63,11 @@ class Handlers
 
         // Оптимизация: batch проверка лайков вместо N+1 запросов
         $userIp = $this->getClientIp($request);
-        $quoteIds = array_map(fn($quote) => $quote->id, $quotes);
+        // Заменяем array_map на простой цикл для лучшей производительности
+        $quoteIds = [];
+        foreach ($quotes as $quote) {
+            $quoteIds[] = $quote->id;
+        }
         $likedMap = $this->repository->areLiked($quoteIds, $userIp);
         
         $responses = [];

@@ -36,22 +36,22 @@ class Router
         $method = $request->getMethod();
         $path = $request->getUri()->getPath();
 
-        // Обработка OPTIONS для CORS
+        // Оптимизация: быстрая проверка метода
         if ($method === 'OPTIONS') {
-            $origin = $request->getHeader('Origin')[0] ?? '*';
+            $origin = $request->getHeaderLine('Origin') ?: '*';
             return $this->addCorsHeaders(new Response(204), $origin);
         }
 
-        // Health check
+        // Health check - самый частый запрос, проверяем первым
         if ($path === '/health' && $method === 'GET') {
             $response = $this->handlers->health($request);
             return $this->addCorsHeaders($response, '*');
         }
 
-        // API routes
-        if (strpos($path, '/api/quotes') === 0) {
+        // API routes - используем strncmp для быстрой проверки префикса
+        if (strncmp($path, '/api/quotes', 11) === 0) {
             $response = $this->handleQuotes($request, $method, $path);
-            $origin = $request->getHeader('Origin')[0] ?? '*';
+            $origin = $request->getHeaderLine('Origin') ?: '*';
             return $this->addCorsHeaders($response, $origin);
         }
 
@@ -127,8 +127,10 @@ class Router
 
     private function jsonResponse(int $statusCode, array $data): ResponseInterface
     {
+        // Оптимизация: используем JSON_THROW_ON_ERROR
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         $response = new Response($statusCode);
-        $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
+        $response->getBody()->write($json);
         return $response->withHeader('Content-Type', 'application/json')
             ->withHeader('X-Backend', 'php');
     }
