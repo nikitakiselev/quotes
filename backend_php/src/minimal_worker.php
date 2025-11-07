@@ -4,18 +4,16 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use Spiral\RoadRunner\Http\PSR7Worker;
+use Spiral\RoadRunner\Worker;
+use Nyholm\Psr7\Response;
+
 fwrite(STDERR, "=== Worker starting ===\n");
 
 try {
-    fwrite(STDERR, "Loading autoload...\n");
-    require __DIR__ . '/../vendor/autoload.php';
-    fwrite(STDERR, "Autoload loaded\n");
-    
-    fwrite(STDERR, "Loading classes...\n");
-    use Spiral\RoadRunner\Http\PSR7Worker;
-    use Spiral\RoadRunner\Worker;
-    use Nyholm\Psr7\Response;
-    fwrite(STDERR, "Classes loaded\n");
+    fwrite(STDERR, "Creating Worker...\n");
     
     fwrite(STDERR, "Creating Worker...\n");
     $rrWorker = Worker::create();
