@@ -331,8 +331,8 @@ const loadTopWeekly = async () => {
       isUpdatingUrl.value = false
     }, 100)
   }
-  // Не обновляем URL для топ-цитат
-  await loadQuote(quotesApi.getTopWeekly, false)
+  // Обновляем URL для топ-цитат
+  await loadQuote(quotesApi.getTopWeekly, true)
 }
 const loadTopAllTime = async () => {
   // Очищаем ID из URL перед загрузкой
@@ -343,8 +343,8 @@ const loadTopAllTime = async () => {
       isUpdatingUrl.value = false
     }, 100)
   }
-  // Не обновляем URL для топ-цитат
-  await loadQuote(quotesApi.getTopAllTime, false)
+  // Обновляем URL для топ-цитат
+  await loadQuote(quotesApi.getTopAllTime, true)
 }
 
 const handleLike = async () => {
