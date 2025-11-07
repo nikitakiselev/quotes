@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, Query, Request, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Json},
 };
@@ -121,9 +121,10 @@ pub async fn create(
 pub async fn update(
     State(repo): State<Arc<QuoteRepository>>,
     Path(id): Path<String>,
+    request: Request,
     Json(req): Json<UpdateQuoteRequest>,
-    headers: HeaderMap,
 ) -> Result<Json<QuoteResponse>, (StatusCode, Json<serde_json::Value>)> {
+    let headers = request.headers();
     let mut quote = repo.get_by_id(&id).await.map_err(|_| error_response(StatusCode::NOT_FOUND, "quote not found"))?;
 
     if let Some(text) = req.text {
@@ -138,7 +139,7 @@ pub async fn update(
         .map_err(|_| error_response(StatusCode::INTERNAL_SERVER_ERROR, "internal server error"))?;
 
     let updated_quote = repo.get_by_id(&id).await.map_err(|_| error_response(StatusCode::NOT_FOUND, "quote not found"))?;
-    let user_ip = get_user_ip(&headers);
+    let user_ip = get_user_ip(headers);
     let is_liked = repo
         .is_liked(&updated_quote.id, &user_ip)
         .await
