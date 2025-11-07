@@ -43,14 +43,15 @@ try {
             $worker->respond($response);
         } catch (\Throwable $e) {
             $response = new \Nyholm\Psr7\Response(500);
-            $response->getBody()->write(json_encode(['error' => 'Internal server error', 'message' => $e->getMessage()]));
+            $response->getBody()->write(json_encode(['error' => 'Internal server error']));
+            $response = $response->withHeader('Content-Type', 'application/json')
+                ->withHeader('X-Backend', 'php');
             $worker->respond($response);
         }
     }
 } catch (\Throwable $e) {
     // Выводим ошибку в stderr для RoadRunner
-    fwrite(STDERR, "Fatal error during initialization: " . $e->getMessage() . "\n");
+    fwrite(STDERR, "Fatal error: " . $e->getMessage() . "\n");
     fwrite(STDERR, $e->getTraceAsString() . "\n");
     exit(1);
 }
-

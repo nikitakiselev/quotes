@@ -22,6 +22,7 @@ class Database
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_TIMEOUT => 5,
         ];
 
         try {
@@ -31,6 +32,8 @@ class Database
                 $config->dbPassword,
                 $options
             );
+            // Проверяем соединение
+            $this->pdo->exec("SELECT 1");
         } catch (PDOException $e) {
             throw new \RuntimeException("Failed to connect to database: " . $e->getMessage());
         }
