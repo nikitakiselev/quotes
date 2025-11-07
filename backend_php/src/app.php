@@ -26,24 +26,31 @@ if (file_exists(__DIR__ . '/../.env')) {
 }
 
 // Инициализация
-$config = new Config();
-$database = new Database($config);
-$repository = new QuoteRepository($database->getPDO());
-$handlers = new Handlers($repository);
-$router = new Router($handlers);
-
-// Создание RoadRunner worker
-$worker = PSR7Worker::create(Worker::create());
-
-// Обработка запросов
-while ($request = $worker->waitRequest()) {
-    try {
-        $response = $router->handle($request);
-        $worker->respond($response);
-    } catch (\Throwable $e) {
-        $response = new \Nyholm\Psr7\Response(500);
-        $response->getBody()->write(json_encode(['error' => 'Internal server error']));
-        $worker->respond($response);
+try {
+    $config = new Config();
+    $database = new Database($config);
+    $repository = new QuoteRepository($database->getPDO());
+    $handlers = new Handlers($repository);
+    $router = new Router($handlers);
+    
+    // Создание RoadRunner worker
+    $worker = PSR7Worker::create(Worker::create());
+    
+    // Обработка запросов
+    while ($request = $worker->waitRequest()) {
+        try {
+            $response = $router->handle($request);
+            $worker->respond($response);
+        } catch (\Throwable $e) {
+            $response = new \Nyholm\Psr7\Response(500);
+            $response->getBody()->write(json_encode(['error' => 'Internal server error', 'message' => $e->getMessage()]));
+            $worker->respond($response);
+        }
     }
+} catch (\Throwable $e) {
+    // Выводим ошибку в stderr для RoadRunner
+    fwrite(STDERR, "Fatal error during initialization: " . $e->getMessage() . "\n");
+    fwrite(STDERR, $e->getTraceAsString() . "\n");
+    exit(1);
 }
 
