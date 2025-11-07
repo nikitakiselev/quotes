@@ -157,7 +157,7 @@ pub async fn like(
     State(repo): State<Arc<QuoteRepository>>,
     Path(id): Path<String>,
     headers: HeaderMap,
-) -> Result<Json<QuoteResponse>, StatusCode> {
+) -> Result<Json<QuoteResponse>, (StatusCode, Json<serde_json::Value>)> {
     let user_ip = get_user_ip(&headers);
     let user_agent = headers
         .get("user-agent")
@@ -166,16 +166,30 @@ pub async fn like(
 
     if let Err(e) = repo.like(&id, &user_ip, user_agent.as_deref()).await {
         let error_msg = e.to_string();
-        if error_msg.contains("already liked") {
-            return Err(StatusCode::BAD_REQUEST);
+        if error_msg.contains("already liked") || error_msg.contains("have already liked") {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Вы уже поставили лайк этой цитате"})),
+            ));
         }
         if error_msg.contains("not found") {
-            return Err(StatusCode::NOT_FOUND);
+            return Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({"error": "quote not found"})),
+            ));
         }
-        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": "internal server error"})),
+        ));
     }
 
-    let quote = repo.get_by_id(&id).await.map_err(|_| StatusCode::NOT_FOUND)?;
+    let quote = repo.get_by_id(&id).await.map_err(|_| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({"error": "quote not found"})),
+        )
+    })?;
     // После лайка пользователь точно лайкнул эту цитату
     Ok(Json(quote.to_response(true)))
 }
