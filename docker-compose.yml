@@ -122,7 +122,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
-      - backend_rust
+      - backend
     networks:
       - quotes_network
     restart: unless-stopped
@@ -142,7 +142,7 @@ services:
     ports:
       - "${ADMIN_PORT:-3001}:80"
     depends_on:
-      - backend_rust
+      - backend
     networks:
       - quotes_network
     restart: unless-stopped
