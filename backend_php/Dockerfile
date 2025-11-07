@@ -16,7 +16,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy application files
 WORKDIR /app
-COPY composer.json composer.lock* ./
+COPY backend_php/composer.json backend_php/composer.lock* ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Install RoadRunner binary
@@ -34,7 +34,7 @@ RUN apk add --no-cache \
 
 # Copy application from builder
 COPY --from=builder /app/vendor /app/vendor
-COPY . /app
+COPY backend_php /app
 
 WORKDIR /app
 
