@@ -16,31 +16,54 @@ impl QuoteRepository {
 
     /// Возвращает случайную цитату
     pub async fn get_random(&self) -> anyhow::Result<Quote> {
-        use tracing::warn;
+        use tracing::{info, warn, error};
         
         // Сначала проверяем, есть ли цитаты вообще
-        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM quotes")
+        info!("Checking quote count in database...");
+        let count: i64 = match sqlx::query_scalar("SELECT COUNT(*) FROM quotes")
             .fetch_one(&self.pool)
-            .await?;
+            .await
+        {
+            Ok(count) => {
+                info!("Found {} quotes in database", count);
+                count
+            }
+            Err(e) => {
+                error!("Failed to count quotes: {}", e);
+                return Err(anyhow::anyhow!("failed to count quotes: {}", e));
+            }
+        };
         
         if count == 0 {
             warn!("No quotes found in database");
             return Err(anyhow::anyhow!("no quotes found"));
         }
         
-        let quote = sqlx::query_as::<_, Quote>(
+        info!("Fetching random quote...");
+        let quote = match sqlx::query_as::<_, Quote>(
             "SELECT id, text, author, likes_count, created_at, updated_at 
              FROM quotes 
              ORDER BY RANDOM() 
              LIMIT 1"
         )
         .fetch_optional(&self.pool)
-        .await?;
+        .await
+        {
+            Ok(Some(quote)) => {
+                info!("Successfully fetched quote: {}", quote.id);
+                quote
+            }
+            Ok(None) => {
+                warn!("Query returned no rows despite count being {}", count);
+                return Err(anyhow::anyhow!("no quotes found"));
+            }
+            Err(e) => {
+                error!("Failed to fetch random quote: {}", e);
+                return Err(anyhow::anyhow!("failed to fetch random quote: {}", e));
+            }
+        };
 
-        quote.ok_or_else(|| {
-            warn!("Query returned no rows despite count being {}", count);
-            anyhow::anyhow!("no quotes found")
-        })
+        Ok(quote)
     }
 
     /// Возвращает все цитаты с пагинацией и поиском
