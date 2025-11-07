@@ -1,13 +1,21 @@
 <?php
+// Выводим в stderr для отладки
+fwrite(STDERR, "Worker starting...\n");
+
 require __DIR__ . '/../vendor/autoload.php';
+
+fwrite(STDERR, "Autoload loaded\n");
 
 use Spiral\RoadRunner\Http\PSR7Worker;
 use Spiral\RoadRunner\Worker;
 use Nyholm\Psr7\Response;
 
+fwrite(STDERR, "Creating worker...\n");
 $worker = PSR7Worker::create(Worker::create());
+fwrite(STDERR, "Worker created, waiting for requests...\n");
 
 while ($request = $worker->waitRequest()) {
+    fwrite(STDERR, "Request received: " . $request->getUri()->getPath() . "\n");
     $path = $request->getUri()->getPath();
     
     if ($path === '/health') {
