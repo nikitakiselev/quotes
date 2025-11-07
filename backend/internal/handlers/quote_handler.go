@@ -89,11 +89,18 @@ func (h *QuoteHandler) GetAll(c *gin.Context) {
 		return
 	}
 
-	// Проверяем статус лайка для каждой цитаты
+	// Оптимизация: batch проверка лайков вместо N+1 запросов
 	userIP := getUserIP(c)
+	quoteIDs := make([]string, len(quotes))
+	for i, quote := range quotes {
+		quoteIDs[i] = quote.ID
+	}
+	
+	likedMap, _ := h.repo.AreLiked(quoteIDs, userIP)
+	
 	responses := make([]models.QuoteResponse, len(quotes))
 	for i, quote := range quotes {
-		isLiked, _ := h.repo.IsLiked(quote.ID, userIP)
+		isLiked := likedMap[quote.ID]
 		responses[i] = quote.ToResponse(isLiked)
 	}
 
