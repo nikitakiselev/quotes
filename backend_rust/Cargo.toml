@@ -29,10 +29,6 @@ dotenv = "0.15"
 anyhow = "1.0"
 thiserror = "1.0"
 
-# Fix version for home crate to avoid edition2024 requirement
-[patch.crates-io]
-home = { version = "=0.5.11" }
-
 
 [profile.release]
 opt-level = 3
