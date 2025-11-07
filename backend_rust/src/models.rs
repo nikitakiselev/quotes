@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 
@@ -10,7 +10,7 @@ where
 }
 
 /// Цитата в системе
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct Quote {
     pub id: String,
     pub text: String,
@@ -18,9 +18,9 @@ pub struct Quote {
     #[sqlx(rename = "likes_count")]
     pub likes_count: i32,
     #[sqlx(rename = "created_at")]
-    pub created_at: DateTime<Utc>,
+    pub created_at: NaiveDateTime,
     #[sqlx(rename = "updated_at")]
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: NaiveDateTime,
 }
 
 /// Запрос на создание цитаты
@@ -64,20 +64,25 @@ pub struct PaginatedQuotesResponse {
 impl Quote {
     /// Преобразует Quote в QuoteResponse
     pub fn to_response(&self, is_liked: bool) -> QuoteResponse {
+        // Конвертируем NaiveDateTime в DateTime<Utc>
+        // Предполагаем, что NaiveDateTime в UTC
+        let created_at = DateTime::<Utc>::from_utc(self.created_at, Utc);
+        let updated_at = DateTime::<Utc>::from_utc(self.updated_at, Utc);
+        
         QuoteResponse {
             id: self.id.clone(),
             text: self.text.clone(),
             author: self.author.clone(),
             likes_count: self.likes_count,
             is_liked,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
+            created_at,
+            updated_at,
         }
     }
 
     /// Создает новую цитату из запроса
     pub fn from_request(req: CreateQuoteRequest) -> Self {
-        let now = Utc::now();
+        let now = Utc::now().naive_utc();
         Self {
             id: Uuid::new_v4().to_string(),
             text: req.text,

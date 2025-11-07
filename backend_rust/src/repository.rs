@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{NaiveDateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -162,7 +162,7 @@ impl QuoteRepository {
         )
         .bind(&quote.text)
         .bind(&quote.author)
-        .bind(Utc::now())
+        .bind(Utc::now().naive_utc())
         .bind(id)
         .execute(&self.pool)
         .await?;
@@ -214,7 +214,7 @@ impl QuoteRepository {
              SET likes_count = likes_count + 1, updated_at = $1
              WHERE id = $2"
         )
-        .bind(Utc::now())
+        .bind(Utc::now().naive_utc())
         .bind(id)
         .execute(&mut *tx)
         .await?;
@@ -234,7 +234,7 @@ impl QuoteRepository {
         .bind(id)
         .bind(user_ip)
         .bind(user_agent)
-        .bind(Utc::now())
+        .bind(Utc::now().naive_utc())
         .execute(&mut *tx)
         .await?;
 
@@ -290,7 +290,7 @@ impl QuoteRepository {
 
         // Обнуляем счетчики лайков
         sqlx::query("UPDATE quotes SET likes_count = 0, updated_at = $1")
-            .bind(Utc::now())
+            .bind(Utc::now().naive_utc())
             .execute(&mut *tx)
             .await?;
 
