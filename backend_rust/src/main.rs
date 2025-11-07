@@ -16,6 +16,10 @@ use router::setup_router;
 
 #[tokio::main]
 async fn main() {
+    // Выводим в stderr для немедленного отображения
+    eprintln!("Starting quotes backend (Rust)...");
+    std::io::Write::flush(&mut std::io::stderr()).ok();
+    
     // Инициализация логирования
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -24,6 +28,7 @@ async fn main() {
         )
         .init();
 
+    eprintln!("Logger initialized");
     info!("Starting quotes backend (Rust)");
 
     // Загрузка переменных окружения
