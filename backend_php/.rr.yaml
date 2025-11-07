@@ -1,0 +1,32 @@
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php"
+  user: ""
+  group: ""
+  env:
+    - APP_RUNTIME: RoadRunner
+  relay: "pipes"
+
+http:
+  address: 0.0.0.0:8082
+  middleware: [ ]
+  pool:
+    num_workers: 4
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+  worker:
+    command: "php src/app.php"
+    relay: "pipes"
+
+logs:
+  mode: production
+  level: info
+  output: stdout
+  err_output: stderr
+  encoding: json
+

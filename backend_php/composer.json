@@ -1,0 +1,22 @@
+{
+    "name": "quotes/backend-php",
+    "description": "Quotes API Backend on PHP with RoadRunner",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*",
+        "spiral/roadrunner-http": "^3.0",
+        "spiral/goridge": "^3.0",
+        "spiral/roadrunner-worker": "^3.0",
+        "nyholm/psr7": "^1.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+
