@@ -118,8 +118,13 @@ pub async fn update(
     Path(id): Path<String>,
     Json(req): Json<UpdateQuoteRequest>,
     headers: HeaderMap,
-) -> Result<Json<QuoteResponse>, StatusCode> {
-    let mut quote = repo.get_by_id(&id).await.map_err(|_| StatusCode::NOT_FOUND)?;
+) -> Result<Json<QuoteResponse>, (StatusCode, Json<serde_json::Value>)> {
+    let mut quote = repo.get_by_id(&id).await.map_err(|_| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({"error": "quote not found"})),
+        )
+    })?;
 
     if let Some(text) = req.text {
         quote.text = text;
@@ -130,9 +135,19 @@ pub async fn update(
 
     repo.update(&id, &quote)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "internal server error"})),
+            )
+        })?;
 
-    let updated_quote = repo.get_by_id(&id).await.map_err(|_| StatusCode::NOT_FOUND)?;
+    let updated_quote = repo.get_by_id(&id).await.map_err(|_| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({"error": "quote not found"})),
+        )
+    })?;
     let user_ip = get_user_ip(&headers);
     let is_liked = repo
         .is_liked(&updated_quote.id, &user_ip)

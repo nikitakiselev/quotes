@@ -2,7 +2,7 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::{calculate_total_pages, Quote};
+use crate::models::Quote;
 
 /// Репозиторий для работы с цитатами
 pub struct QuoteRepository {
