@@ -150,7 +150,7 @@ pub async fn update(
 pub async fn delete(
     State(repo): State<Arc<QuoteRepository>>,
     Path(id): Path<String>,
-) -> Result<StatusCode, (StatusCode, Json<serde_json::Value>)> {
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     repo.delete(&id)
         .await
         .map_err(|_| error_response(StatusCode::NOT_FOUND, "quote not found"))?;
