@@ -6,6 +6,7 @@ RUN apk add --no-cache \
     git \
     unzip \
     postgresql-dev \
+    linux-headers \
     $PHPIZE_DEPS
 
 # Install PHP extensions
