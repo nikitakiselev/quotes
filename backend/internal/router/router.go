@@ -15,6 +15,13 @@ import (
 func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
+	// Middleware для добавления кастомного header с указанием бэкенда
+	// Должен быть ПЕРЕД CORS, чтобы заголовок устанавливался до обработки CORS
+	r.Use(func(c *gin.Context) {
+		c.Header("X-Backend", "go")
+		c.Next()
+	})
+
 	// Настройка CORS
 	corsConfig := cors.DefaultConfig()
 	if cfg.CORSOrigin == "*" {
@@ -30,12 +37,6 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 	corsConfig.AllowBrowserExtensions = true
 
 	r.Use(cors.New(corsConfig))
-
-	// Middleware для добавления кастомного header с указанием бэкенда
-	r.Use(func(c *gin.Context) {
-		c.Header("X-Backend", "go")
-		c.Next()
-	})
 
 	// API routes
 	api := r.Group("/api")
