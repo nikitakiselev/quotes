@@ -49,5 +49,5 @@ WORKDIR /app
 EXPOSE 8082
 
 # Run RoadRunner
-CMD ["/usr/local/bin/rr", "serve", "-c", ".rr.yaml", "-w", "src/minimal_worker.php"]
+CMD ["/usr/local/bin/rr", "serve", "-c", ".rr.yaml"]
 
