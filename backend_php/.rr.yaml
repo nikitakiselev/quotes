@@ -1,16 +1,5 @@
 version: "3"
 
-rpc:
-  listen: tcp://127.0.0.1:6001
-
-server:
-  command: "php"
-  user: ""
-  group: ""
-  env:
-    - APP_RUNTIME: RoadRunner
-  relay: "pipes"
-
 http:
   address: 0.0.0.0:8082
   middleware: [ ]

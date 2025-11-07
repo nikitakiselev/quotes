@@ -21,7 +21,11 @@ COPY backend_php/composer.json backend_php/composer.lock* ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Install RoadRunner binary
-RUN composer require spiral/roadrunner-cli --no-interaction --prefer-dist
+RUN composer require spiral/roadrunner-cli --no-interaction --prefer-dist && \
+    php vendor/bin/rr get-binary -n && \
+    mkdir -p /usr/local/bin && \
+    cp /app/rr /usr/local/bin/rr && \
+    chmod +x /usr/local/bin/rr
 
 # Runtime stage
 FROM php:8.2-cli-alpine
@@ -36,6 +40,7 @@ RUN apk add --no-cache \
 
 # Copy application from builder
 COPY --from=builder /app/vendor /app/vendor
+COPY --from=builder /usr/local/bin/rr /usr/local/bin/rr
 COPY backend_php /app
 
 WORKDIR /app
@@ -44,5 +49,5 @@ WORKDIR /app
 EXPOSE 8082
 
 # Run RoadRunner
-CMD ["php", "vendor/bin/rr", "serve", "-c", ".rr.yaml"]
+CMD ["/usr/local/bin/rr", "serve", "-c", ".rr.yaml"]
 

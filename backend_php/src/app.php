@@ -33,9 +33,7 @@ $handlers = new Handlers($repository);
 $router = new Router($handlers);
 
 // Создание RoadRunner worker
-$worker = PSR7Worker::create(
-    Worker::create()
-);
+$worker = PSR7Worker::create(Worker::create());
 
 // Обработка запросов
 while ($request = $worker->waitRequest()) {
@@ -43,7 +41,6 @@ while ($request = $worker->waitRequest()) {
         $response = $router->handle($request);
         $worker->respond($response);
     } catch (\Throwable $e) {
-        error_log("Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
         $response = new \Nyholm\Psr7\Response(500);
         $response->getBody()->write(json_encode(['error' => 'Internal server error']));
         $worker->respond($response);

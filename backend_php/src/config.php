@@ -15,14 +15,15 @@ class Config
 
     public function __construct()
     {
-        $this->dbHost = $_ENV['DB_HOST'] ?? 'localhost';
-        $this->dbPort = $_ENV['DB_PORT'] ?? '5432';
-        $this->dbUser = $_ENV['DB_USER'] ?? 'quotes_user';
-        $this->dbPassword = $_ENV['DB_PASSWORD'] ?? 'quotes_password';
-        $this->dbName = $_ENV['DB_NAME'] ?? 'quotes_db';
-        $this->dbSSLMode = $_ENV['DB_SSLMODE'] ?? 'disable';
-        $this->apiPort = $_ENV['API_PORT'] ?? '8082';
-        $this->corsOrigin = $_ENV['CORS_ORIGIN'] ?? '*';
+        // Используем getenv() для получения переменных окружения из Docker
+        $this->dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? 'localhost');
+        $this->dbPort = getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? '5432');
+        $this->dbUser = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'quotes_user');
+        $this->dbPassword = getenv('DB_PASSWORD') ?: ($_ENV['DB_PASSWORD'] ?? 'quotes_password');
+        $this->dbName = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'quotes_db');
+        $this->dbSSLMode = getenv('DB_SSLMODE') ?: ($_ENV['DB_SSLMODE'] ?? 'disable');
+        $this->apiPort = getenv('API_PORT') ?: ($_ENV['API_PORT'] ?? '8082');
+        $this->corsOrigin = getenv('CORS_ORIGIN') ?: ($_ENV['CORS_ORIGIN'] ?? '*');
     }
 
     public function getDatabaseDSN(): string
