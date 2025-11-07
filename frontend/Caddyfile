@@ -3,15 +3,15 @@
     root * /usr/share/caddy
     file_server
 
-    # Проксирование API запросов к backend_rust
-    handle /api/* {
-        reverse_proxy backend_rust:8081 {
-            # Передаем заголовки клиента к backend
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Real-IP {remote_host}
-        }
-        # Caddy автоматически передает все заголовки от backend к клиенту, включая X-Backend
-    }
+           # Проксирование API запросов к backend (Go)
+           handle /api/* {
+               reverse_proxy backend:8080 {
+                   # Передаем заголовки клиента к backend
+                   header_up X-Forwarded-For {remote_host}
+                   header_up X-Real-IP {remote_host}
+               }
+               # Caddy автоматически передает все заголовки от backend к клиенту, включая X-Backend
+           }
 
     # SPA routing - все остальные запросы отдаем index.html
     handle {
