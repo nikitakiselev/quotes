@@ -17,8 +17,10 @@ use router::setup_router;
 #[tokio::main]
 async fn main() {
     // Устанавливаем обработчик паники
-    std::panic::set_hook(Box::new(|panic_info| {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
         eprintln!("PANIC: {:?}", panic_info);
+        default_hook(panic_info);
     }));
     
     // Выводим в stderr для немедленного отображения
