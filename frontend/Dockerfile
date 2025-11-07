@@ -7,7 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Установка зависимостей
-RUN npm install
+# Игнорируем postinstall скрипты, которые могут требовать patch-package
+RUN npm install --ignore-scripts
 
 # Копирование исходного кода
 COPY . .
