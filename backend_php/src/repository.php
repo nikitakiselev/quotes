@@ -15,12 +15,14 @@ class QuoteRepository
 
     public function getRandom(): ?Quote
     {
-        $stmt = $this->pdo->query(
+        // Используем prepare вместо query для лучшей производительности
+        $stmt = $this->pdo->prepare(
             "SELECT id, text, author, likes_count, created_at, updated_at 
              FROM quotes 
              ORDER BY RANDOM() 
              LIMIT 1"
         );
+        $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? Quote::fromArray($row) : null;
     }
@@ -38,7 +40,10 @@ class QuoteRepository
             $countStmt->execute([$searchPattern, $searchPattern]);
             $total = (int)$countStmt->fetchColumn();
         } else {
-            $total = (int)$this->pdo->query("SELECT COUNT(*) FROM quotes")->fetchColumn();
+            // Используем prepare вместо query
+            $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM quotes");
+            $countStmt->execute();
+            $total = (int)$countStmt->fetchColumn();
         }
 
         // Получение цитат
@@ -177,27 +182,66 @@ class QuoteRepository
         return (int)$stmt->fetchColumn() > 0;
     }
 
+    /**
+     * Batch проверка лайков для оптимизации (устранение N+1 проблемы)
+     * @param string[] $quoteIds
+     * @param string $userIp
+     * @return array<string, bool> Map quote_id => is_liked
+     */
+    public function areLiked(array $quoteIds, string $userIp): array
+    {
+        if (empty($quoteIds)) {
+            return [];
+        }
+
+        // Используем ANY для эффективного batch запроса
+        $placeholders = implode(',', array_fill(0, count($quoteIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT quote_id FROM likes WHERE quote_id IN ($placeholders) AND user_ip = ?"
+        );
+        
+        $params = array_merge($quoteIds, [$userIp]);
+        $stmt->execute($params);
+
+        $likedIds = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $likedIds[$row['quote_id']] = true;
+        }
+
+        // Создаем полный массив с false для нелайкнутых
+        $result = [];
+        foreach ($quoteIds as $quoteId) {
+            $result[$quoteId] = isset($likedIds[$quoteId]);
+        }
+
+        return $result;
+    }
+
     public function getTopWeekly(): ?Quote
     {
-        $stmt = $this->pdo->query(
+        // Используем prepare вместо query
+        $stmt = $this->pdo->prepare(
             "SELECT id, text, author, likes_count, created_at, updated_at 
              FROM quotes 
              WHERE created_at >= NOW() - INTERVAL '7 days'
              ORDER BY likes_count DESC, created_at DESC
              LIMIT 1"
         );
+        $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? Quote::fromArray($row) : null;
     }
 
     public function getTopAllTime(): ?Quote
     {
-        $stmt = $this->pdo->query(
+        // Используем prepare вместо query
+        $stmt = $this->pdo->prepare(
             "SELECT id, text, author, likes_count, created_at, updated_at 
              FROM quotes 
              ORDER BY likes_count DESC, created_at DESC
              LIMIT 1"
         );
+        $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? Quote::fromArray($row) : null;
     }

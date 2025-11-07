@@ -6,7 +6,7 @@ server:
 http:
   address: 0.0.0.0:8082
   pool:
-    num_workers: 4
+    num_workers: 16  # Увеличено для лучшей параллельности
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60s

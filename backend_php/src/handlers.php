@@ -61,10 +61,14 @@ class Handlers
 
         [$quotes, $total] = $this->repository->getAll($page, $pageSize, $search);
 
+        // Оптимизация: batch проверка лайков вместо N+1 запросов
         $userIp = $this->getClientIp($request);
+        $quoteIds = array_map(fn($quote) => $quote->id, $quotes);
+        $likedMap = $this->repository->areLiked($quoteIds, $userIp);
+        
         $responses = [];
         foreach ($quotes as $quote) {
-            $isLiked = $this->repository->isLiked($quote->id, $userIp);
+            $isLiked = $likedMap[$quote->id] ?? false;
             $responses[] = $quote->toResponse($isLiked);
         }
 
