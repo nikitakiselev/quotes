@@ -48,6 +48,6 @@ WORKDIR /app
 # Expose port
 EXPOSE 8082
 
-# Run RoadRunner with worker file
-CMD ["/usr/local/bin/rr", "serve", "-c", ".rr.yaml", "-w", "src/test_worker.php"]
+# Run RoadRunner
+CMD ["/usr/local/bin/rr", "serve", "-c", ".rr.yaml"]
 
