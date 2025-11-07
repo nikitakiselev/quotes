@@ -29,6 +29,7 @@ FROM php:8.2-cli-alpine
 # Install runtime dependencies
 RUN apk add --no-cache \
     postgresql-dev \
+    linux-headers \
     $PHPIZE_DEPS \
     && docker-php-ext-install pdo pdo_pgsql sockets \
     && apk del $PHPIZE_DEPS
