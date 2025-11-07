@@ -1,7 +1,7 @@
 version: "3"
 
 server:
-  command: "php src/test_worker.php"
+  command: "php src/worker.php"
 
 http:
   address: 0.0.0.0:8082

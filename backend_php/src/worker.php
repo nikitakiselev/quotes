@@ -2,9 +2,9 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Spiral\RoadRunner\Http\PSR7Worker;
 use Spiral\RoadRunner\Worker;
-use Nyholm\Psr7\Response;
+use Spiral\RoadRunner\Http\PSR7Worker;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use App\Config;
 use App\Database;
 use App\QuoteRepository;
@@ -20,19 +20,22 @@ try {
     $router = new Router($handlers);
     
     // Создание RoadRunner worker
-    $worker = PSR7Worker::create(Worker::create());
+    $worker = Worker::create();
+    $psr17Factory = new Psr17Factory();
+    $psr7Worker = new PSR7Worker($worker, $psr17Factory, $psr17Factory, $psr17Factory);
     
     // Обработка запросов
-    while ($request = $worker->waitRequest()) {
+    while ($request = $psr7Worker->waitRequest()) {
         try {
             $response = $router->handle($request);
-            $worker->respond($response);
+            $psr7Worker->respond($response);
         } catch (\Throwable $e) {
-            $response = new Response(500);
-            $response->getBody()->write(json_encode(['error' => 'Internal server error']));
-            $response = $response->withHeader('Content-Type', 'application/json')
-                ->withHeader('X-Backend', 'php');
-            $worker->respond($response);
+            $psr7Worker->getWorker()->error((string)$e);
+            $response = $psr17Factory->createResponse(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('X-Backend', 'php')
+                ->withBody($psr17Factory->createStream(json_encode(['error' => 'Internal server error'])));
+            $psr7Worker->respond($response);
         }
     }
 } catch (\Throwable $e) {
@@ -40,4 +43,3 @@ try {
     fwrite(STDERR, $e->getTraceAsString() . "\n");
     exit(1);
 }
-
