@@ -9,7 +9,7 @@ http:
     allocate_timeout: 60s
     destroy_timeout: 60s
   worker:
-    command: "php src/app.php"
+    command: "php test_rr.php"
     relay: "pipes"
 
 logs:
