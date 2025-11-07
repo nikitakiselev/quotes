@@ -108,7 +108,7 @@ pub async fn get_by_id(
 pub async fn create(
     State(repo): State<Arc<QuoteRepository>>,
     Json(req): Json<CreateQuoteRequest>,
-) -> Result<(StatusCode, Json<QuoteResponse>), (StatusCode, Json<serde_json::Value>)> {
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let quote = crate::models::Quote::from_request(req);
     repo.create(&quote)
         .await
