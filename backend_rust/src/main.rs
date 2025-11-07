@@ -16,6 +16,11 @@ use router::setup_router;
 
 #[tokio::main]
 async fn main() {
+    // Устанавливаем обработчик паники
+    std::panic::set_hook(Box::new(|panic_info| {
+        eprintln!("PANIC: {:?}", panic_info);
+    }));
+    
     // Выводим в stderr для немедленного отображения
     eprintln!("Starting quotes backend (Rust)...");
     std::io::Write::flush(&mut std::io::stderr()).ok();
