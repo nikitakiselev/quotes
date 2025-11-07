@@ -3,9 +3,10 @@
     root * /usr/share/caddy
     file_server
 
-    # Проксирование API запросов к Rust backend
+    # Проксирование API запросов к backend
+    # Используем Go backend, так как Rust backend пока не работает
     handle /api/* {
-        reverse_proxy backend_rust:8081
+        reverse_proxy backend:8080
     }
 
     # SPA routing - все остальные запросы отдаем index.html
