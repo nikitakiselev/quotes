@@ -13,8 +13,8 @@ http:
     relay: "pipes"
 
 logs:
-  mode: production
-  level: info
+  mode: development
+  level: debug
   output: stdout
   err_output: stderr
   encoding: json
