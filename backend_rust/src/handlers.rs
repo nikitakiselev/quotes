@@ -121,8 +121,8 @@ pub async fn create(
 pub async fn update(
     State(repo): State<Arc<QuoteRepository>>,
     Path(id): Path<String>,
-    request: Request,
     Json(req): Json<UpdateQuoteRequest>,
+    request: Request,
 ) -> Result<Json<QuoteResponse>, (StatusCode, Json<serde_json::Value>)> {
     let headers = request.headers();
     let mut quote = repo.get_by_id(&id).await.map_err(|_| error_response(StatusCode::NOT_FOUND, "quote not found"))?;
