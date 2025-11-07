@@ -322,29 +322,29 @@ const loadRandomQuote = () => {
   }
   loadQuote(quotesApi.getRandom)
 }
-const loadTopWeekly = () => {
-  // Очищаем ID из URL
+const loadTopWeekly = async () => {
+  // Очищаем ID из URL перед загрузкой
   if (route.params.id) {
     isUpdatingUrl.value = true
-    router.replace('/').finally(() => {
-      setTimeout(() => {
-        isUpdatingUrl.value = false
-      }, 100)
-    })
+    await router.replace('/')
+    setTimeout(() => {
+      isUpdatingUrl.value = false
+    }, 100)
   }
-  loadQuote(quotesApi.getTopWeekly)
+  // Не обновляем URL для топ-цитат
+  await loadQuote(quotesApi.getTopWeekly, false)
 }
-const loadTopAllTime = () => {
-  // Очищаем ID из URL
+const loadTopAllTime = async () => {
+  // Очищаем ID из URL перед загрузкой
   if (route.params.id) {
     isUpdatingUrl.value = true
-    router.replace('/').finally(() => {
-      setTimeout(() => {
-        isUpdatingUrl.value = false
-      }, 100)
-    })
+    await router.replace('/')
+    setTimeout(() => {
+      isUpdatingUrl.value = false
+    }, 100)
   }
-  loadQuote(quotesApi.getTopAllTime)
+  // Не обновляем URL для топ-цитат
+  await loadQuote(quotesApi.getTopAllTime, false)
 }
 
 const handleLike = async () => {
