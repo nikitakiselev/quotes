@@ -3,10 +3,15 @@
     root * /usr/share/caddy
     file_server
 
-    # Проксирование API запросов к backend
-    # Используем Go backend, так как Rust backend пока не работает
+    # Проксирование API запросов к backend_rust
     handle /api/* {
-        reverse_proxy backend:8080
+        reverse_proxy backend_rust:8081 {
+            # Передаем все заголовки от backend, включая X-Backend
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Real-IP {remote_host}
+        }
+        # Убеждаемся, что заголовки от backend передаются клиенту
+        header_down X-Backend {http.reverse_proxy.header.X-Backend}
     }
 
     # SPA routing - все остальные запросы отдаем index.html
