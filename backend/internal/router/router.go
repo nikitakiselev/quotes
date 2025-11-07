@@ -13,7 +13,12 @@ import (
 
 // SetupRouter настраивает и возвращает роутер
 func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.Engine {
-	r := gin.Default()
+	// Используем gin.New() вместо gin.Default() для production
+	// gin.Default() включает logger и recovery middleware, что замедляет
+	r := gin.New()
+	
+	// Добавляем только необходимый recovery middleware
+	r.Use(gin.Recovery())
 
 	// Middleware для добавления кастомного header с указанием бэкенда
 	// Должен быть ПЕРЕД CORS, чтобы заголовок устанавливался до обработки CORS

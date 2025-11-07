@@ -9,6 +9,7 @@ import (
 	"quotes-backend/internal/models"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // QuoteRepository определяет интерфейс для работы с цитатами
@@ -21,6 +22,7 @@ type QuoteRepository interface {
 	Delete(id string) error
 	Like(id string, userIP, userAgent string) error
 	IsLiked(id string, userIP string) (bool, error)
+	AreLiked(ids []string, userIP string) (map[string]bool, error) // Batch проверка лайков
 	GetTopWeekly() (*models.Quote, error)
 	GetTopAllTime() (*models.Quote, error)
 	ResetLikes() error
@@ -314,6 +316,37 @@ func (r *quoteRepository) IsLiked(id string, userIP string) (bool, error) {
 		return false, fmt.Errorf("failed to check like status: %w", err)
 	}
 	return count > 0, nil
+}
+
+// AreLiked проверяет, какие цитаты лайкнул пользователь (batch запрос для оптимизации)
+func (r *quoteRepository) AreLiked(ids []string, userIP string) (map[string]bool, error) {
+	if len(ids) == 0 {
+		return make(map[string]bool), nil
+	}
+
+	// Используем ANY для эффективного batch запроса
+	query := `SELECT quote_id FROM likes WHERE quote_id = ANY($1) AND user_ip = $2`
+
+	rows, err := r.db.Query(query, pq.Array(ids), userIP)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check liked quotes: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]bool)
+	for _, id := range ids {
+		result[id] = false
+	}
+
+	for rows.Next() {
+		var quoteID string
+		if err := rows.Scan(&quoteID); err != nil {
+			return nil, fmt.Errorf("failed to scan quote_id: %w", err)
+		}
+		result[quoteID] = true
+	}
+
+	return result, nil
 }
 
 // GetTopWeekly возвращает цитату с наибольшим количеством лайков за последнюю неделю

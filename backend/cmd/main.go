@@ -10,6 +10,7 @@ import (
 	"quotes-backend/internal/repository"
 	"quotes-backend/internal/router"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -18,6 +19,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
+
+	// Устанавливаем production режим для Gin (отключает debug режим)
+	gin.SetMode(gin.ReleaseMode)
 
 	// Инициализация конфигурации
 	cfg := config.Load()

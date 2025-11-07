@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"quotes-backend/internal/config"
 
@@ -23,6 +24,23 @@ func Connect(cfg *config.Config) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
+
+	// Оптимизация пула соединений для высокой производительности
+	// MaxOpenConns - максимальное количество открытых соединений
+	// Для высоконагруженного сервера устанавливаем 25 (по умолчанию 0 = неограниченно, но это плохо)
+	db.SetMaxOpenConns(25)
+	
+	// MaxIdleConns - максимальное количество неактивных соединений в пуле
+	// Должно быть меньше MaxOpenConns
+	db.SetMaxIdleConns(10)
+	
+	// ConnMaxLifetime - максимальное время жизни соединения
+	// Переподключаемся каждые 5 минут для предотвращения проблем с таймаутами
+	db.SetConnMaxLifetime(5 * time.Minute)
+	
+	// ConnMaxIdleTime - максимальное время простоя соединения
+	// Закрываем неиспользуемые соединения через 10 минут
+	db.SetConnMaxIdleTime(10 * time.Minute)
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
