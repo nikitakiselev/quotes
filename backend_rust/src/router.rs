@@ -25,14 +25,14 @@ pub fn setup_router(repo: QuoteRepository, cfg: &Config) -> Router {
             .allow_origin(Any)
             .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS, Method::PATCH])
             .allow_headers(Any)
-            .expose_headers(Any)
+            .expose_headers([axum::http::header::HeaderName::from_static("x-backend")])
     } else {
         use tower_http::cors::AllowOrigin;
         CorsLayer::new()
             .allow_origin(AllowOrigin::exact(cfg.cors_origin.parse::<axum::http::HeaderValue>().unwrap()))
             .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS, Method::PATCH])
             .allow_headers(Any)
-            .expose_headers(Any)
+            .expose_headers([axum::http::header::HeaderName::from_static("x-backend")])
             .allow_credentials(true)
     };
 
@@ -53,12 +53,27 @@ pub fn setup_router(repo: QuoteRepository, cfg: &Config) -> Router {
     // Health check
     let health_route = Router::new().route("/health", get(handlers::health));
 
+    // Middleware для добавления кастомного header с указанием бэкенда
+    use axum::middleware::Next;
+    use axum::response::Response;
+    use axum::http::{HeaderValue, Request};
+    
+    async fn add_backend_header<B>(req: Request<B>, next: Next<B>) -> Response {
+        let mut response = next.run(req).await;
+        response.headers_mut().insert(
+            axum::http::header::HeaderName::from_static("x-backend"),
+            HeaderValue::from_static("rust")
+        );
+        response
+    }
+
     // Объединяем все роуты
     Router::new()
         .nest("/api", api_routes)
         .merge(health_route)
         .layer(
             ServiceBuilder::new()
+                .layer(axum::middleware::from_fn(add_backend_header))
                 .layer(TraceLayer::new_for_http())
                 .layer(cors),
         )

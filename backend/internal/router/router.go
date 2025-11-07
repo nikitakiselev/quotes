@@ -26,10 +26,16 @@ func SetupRouter(quoteHandler *handlers.QuoteHandler, cfg *config.Config) *gin.E
 	}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"}
-	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type"}
+	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type", "X-Backend"}
 	corsConfig.AllowBrowserExtensions = true
 
 	r.Use(cors.New(corsConfig))
+
+	// Middleware для добавления кастомного header с указанием бэкенда
+	r.Use(func(c *gin.Context) {
+		c.Header("X-Backend", "go")
+		c.Next()
+	})
 
 	// API routes
 	api := r.Group("/api")
