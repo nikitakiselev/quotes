@@ -1,6 +1,15 @@
 <?php
 
+// Загрузка autoload
 require __DIR__ . '/../vendor/autoload.php';
+
+// Явная загрузка классов приложения (на случай проблем с autoload)
+require __DIR__ . '/config.php';
+require __DIR__ . '/database.php';
+require __DIR__ . '/models.php';
+require __DIR__ . '/repository.php';
+require __DIR__ . '/handlers.php';
+require __DIR__ . '/router.php';
 
 use Spiral\RoadRunner\Worker;
 use Spiral\RoadRunner\Http\PSR7Worker;
