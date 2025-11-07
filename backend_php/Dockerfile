@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     $PHPIZE_DEPS
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql
+RUN docker-php-ext-install pdo pdo_pgsql sockets
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -29,7 +29,7 @@ FROM php:8.2-cli-alpine
 RUN apk add --no-cache \
     postgresql-dev \
     $PHPIZE_DEPS \
-    && docker-php-ext-install pdo pdo_pgsql \
+    && docker-php-ext-install pdo pdo_pgsql sockets \
     && apk del $PHPIZE_DEPS
 
 # Copy application from builder
