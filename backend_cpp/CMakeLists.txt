@@ -25,7 +25,12 @@ find_package(PostgreSQL REQUIRED)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${PostgreSQL_INCLUDE_DIRS})
+if(PostgreSQL_INCLUDE_DIRS)
+    include_directories(${PostgreSQL_INCLUDE_DIRS})
+endif()
+if(PostgreSQL_INCLUDE_DIR)
+    include_directories(${PostgreSQL_INCLUDE_DIR})
+endif()
 
 # Source files
 set(SOURCES
