@@ -16,13 +16,18 @@ RUN apt-get update && apt-get install -y \
 
 # Build Drogon from source
 WORKDIR /tmp
-RUN git clone https://github.com/drogonframework/drogon.git && \
+RUN git clone --depth 1 --branch v1.9.0 https://github.com/drogonframework/drogon.git && \
     cd drogon && \
-    git submodule update --init && \
+    git submodule update --init --recursive && \
     mkdir build && cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local && \
     cmake --build . -j$(nproc) && \
-    cmake --install . --prefix /usr/local
+    cmake --install . && \
+    # Verify installation
+    ls -la /usr/local/lib/cmake/drogon/ || echo "Drogon cmake files not found" && \
+    find /usr/local -name "*drogon*" -type f | head -10
 
 # Copy source code
 WORKDIR /app
@@ -33,7 +38,8 @@ RUN mkdir -p build && cd build && \
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CXX_FLAGS="-O3 -march=native -flto" \
-        -DCMAKE_PREFIX_PATH=/usr/local && \
+        -DCMAKE_PREFIX_PATH=/usr/local \
+        -Ddrogon_DIR=/usr/local/lib/cmake/drogon && \
     cmake --build . -j$(nproc) && \
     cmake --install . --prefix /app/install
 
