@@ -39,12 +39,12 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy binary (includes all dependencies statically or we copy shared libs)
+# Copy binary
 COPY --from=builder /app/install/bin/quotes_backend_cpp /app/main
 
-# Copy Drogon shared libraries if needed
-COPY --from=builder /app/build/_deps/drogon-build/lib/libdrogon.so* /usr/local/lib/ 2>/dev/null || true
-COPY --from=builder /app/build/_deps/drogon-build/lib/libtrantor.so* /usr/local/lib/ 2>/dev/null || true
+# Copy Drogon shared libraries from build directory
+COPY --from=builder /app/build/_deps/drogon-build/lib/libdrogon.so* /usr/local/lib/
+COPY --from=builder /app/build/_deps/drogon-build/lib/libtrantor.so* /usr/local/lib/
 RUN ldconfig
 
 WORKDIR /app
