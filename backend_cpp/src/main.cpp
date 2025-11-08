@@ -121,12 +121,12 @@ int main() {
             {drogon::Get, drogon::Post, drogon::Put, drogon::Delete});
         
         // Start server
-        std::string addr = "0.0.0.0:" + std::to_string(cfg.apiPort);
-        std::cout << "Starting C++ backend on " << addr << std::endl;
+        std::string addr = "0.0.0.0";
+        std::cout << "Starting C++ backend on " << addr << ":" << cfg.apiPort << std::endl;
         
         drogon::app()
             .setLogLevel(trantor::Logger::kWarn)
-            .addListener(addr)
+            .addListener(addr, static_cast<uint16_t>(cfg.apiPort))
             .setThreadNum(0)  // Auto-detect optimal thread count (CPU cores)
             .run();
             
