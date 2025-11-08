@@ -80,32 +80,32 @@ services:
       - quotes_network
     restart: unless-stopped
 
-         backend_cpp:
-           build:
-             context: .
-             dockerfile: ./backend_cpp/Dockerfile
-           container_name: quotes_backend_cpp
-           security_opt:
-             - apparmor:unconfined
-           environment:
-             DB_HOST: postgres
-             DB_PORT: 5432
-             DB_USER: ${DB_USER:-quotes_user}
-             DB_PASSWORD: ${DB_PASSWORD:-quotes_password}
-             DB_NAME: ${DB_NAME:-quotes_db}
-             DB_SSLMODE: disable
-             API_PORT: ${BACKEND_CPP_PORT:-8083}
-             CORS_ORIGIN: ${CORS_ORIGIN:-*}
-           ports:
-             - "${BACKEND_CPP_PORT:-8083}:8083"
-           depends_on:
-             postgres:
-               condition: service_started
-           volumes:
-             - ./db:/app/db
-           networks:
-             - quotes_network
-           restart: unless-stopped
+  backend_cpp:
+    build:
+      context: .
+      dockerfile: ./backend_cpp/Dockerfile
+    container_name: quotes_backend_cpp
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-quotes_user}
+      DB_PASSWORD: ${DB_PASSWORD:-quotes_password}
+      DB_NAME: ${DB_NAME:-quotes_db}
+      DB_SSLMODE: disable
+      API_PORT: ${BACKEND_CPP_PORT:-8083}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    ports:
+      - "${BACKEND_CPP_PORT:-8083}:8083"
+    depends_on:
+      postgres:
+        condition: service_started
+    volumes:
+      - ./db:/app/db
+    networks:
+      - quotes_network
+    restart: unless-stopped
 
   frontend:
     build:
