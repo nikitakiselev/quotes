@@ -14,32 +14,15 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Build Drogon from source
-WORKDIR /tmp
-RUN git clone --depth 1 --branch v1.9.0 https://github.com/drogonframework/drogon.git && \
-    cd drogon && \
-    git submodule update --init --recursive && \
-    mkdir build && cd build && \
-    cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cmake --build . -j$(nproc) && \
-    cmake --install . && \
-    # Verify installation
-    ls -la /usr/local/lib/cmake/drogon/ || echo "Drogon cmake files not found" && \
-    find /usr/local -name "*drogon*" -type f | head -10
-
 # Copy source code
 WORKDIR /app
 COPY backend_cpp /app
 
-# Build application
+# Build application (Drogon will be downloaded and built automatically)
 RUN mkdir -p build && cd build && \
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="-O3 -march=native -flto" \
-        -DCMAKE_PREFIX_PATH=/usr/local \
-        -Ddrogon_DIR=/usr/local/lib/cmake/drogon && \
+        -DCMAKE_CXX_FLAGS="-O3 -march=native -flto" && \
     cmake --build . -j$(nproc) && \
     cmake --install . --prefix /app/install
 
@@ -56,13 +39,13 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Drogon libraries
-COPY --from=builder /usr/local/lib/libdrogon.so* /usr/local/lib/
-COPY --from=builder /usr/local/lib/libtrantor.so* /usr/local/lib/
-RUN ldconfig
-
-# Copy binary
+# Copy binary (includes all dependencies statically or we copy shared libs)
 COPY --from=builder /app/install/bin/quotes_backend_cpp /app/main
+
+# Copy Drogon shared libraries if needed
+COPY --from=builder /app/build/_deps/drogon-build/lib/libdrogon.so* /usr/local/lib/ 2>/dev/null || true
+COPY --from=builder /app/build/_deps/drogon-build/lib/libtrantor.so* /usr/local/lib/ 2>/dev/null || true
+RUN ldconfig
 
 WORKDIR /app
 

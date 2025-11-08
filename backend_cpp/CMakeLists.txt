@@ -4,8 +4,23 @@ project(quotes_backend_cpp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find dependencies
-find_package(drogon REQUIRED)
+# Include FetchContent for downloading Drogon
+include(FetchContent)
+
+# Download and build Drogon
+FetchContent_Declare(
+    drogon
+    GIT_REPOSITORY https://github.com/drogonframework/drogon.git
+    GIT_TAG v1.9.0
+)
+
+# Set Drogon options before fetching
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(drogon)
+
+# Find PostgreSQL
 find_package(PostgreSQL REQUIRED)
 
 # Include directories
@@ -26,6 +41,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME}
+    PRIVATE
     drogon::drogon
     ${PostgreSQL_LIBRARIES}
 )
@@ -36,4 +52,3 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -march=native
     -flto
 )
-
