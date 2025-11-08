@@ -41,10 +41,9 @@ std::pair<std::vector<Quote>, int64_t> QuoteRepository::getAll(int page, int pag
         std::string searchPattern = "%" + search + "%";
         const char* countQuery = "SELECT COUNT(*) FROM quotes WHERE text ILIKE $1 OR author ILIKE $1";
         const char* paramValues[1] = {searchPattern.c_str()};
-        int paramLengths[1] = {static_cast<int>(search.length())};
+        int paramLengths[1] = {static_cast<int>(searchPattern.length())};
         int paramFormats[1] = {0};
         
-        int paramLengths[1] = {static_cast<int>(searchPattern.length())};
         PGresult* countRes = PQexecParams(conn, countQuery, 1, nullptr, paramValues, paramLengths, paramFormats, 0);
         if (PQresultStatus(countRes) == PGRES_TUPLES_OK) {
             total = std::stoll(PQgetvalue(countRes, 0, 0));

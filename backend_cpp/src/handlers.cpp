@@ -1,13 +1,11 @@
 #include "handlers.h"
 #include <drogon/HttpResponse.h>
 #include <drogon/HttpTypes.h>
-#include <drogon/utils/Utilities.h>
 #include <json/json.h>
-#include <uuid/uuid.h>
 #include <ctime>
-#include <iomanip>
 #include <sstream>
 #include <random>
+#include <cstring>
 
 std::string QuoteHandlers::getClientIP(const drogon::HttpRequestPtr& req) {
     auto forwarded = req->getHeader("X-Forwarded-For");
@@ -178,19 +176,18 @@ void QuoteHandlers::create(const drogon::HttpRequestPtr& req,
         }
         std::string uuidStr = uuidStream.str();
         
-        // Get current time
+        // Get current time in ISO format
         auto now = std::time(nullptr);
-        std::stringstream ss;
-        ss << std::put_time(std::gmtime(&now), "%Y-%m-%d %H:%M:%S");
-        std::string timestamp = ss.str();
+        char timestamp[32];
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::gmtime(&now));
         
         Quote quote;
         quote.id = uuidStr;
         quote.text = (*jsonPtr)["text"].asString();
         quote.author = (*jsonPtr)["author"].asString();
         quote.likesCount = 0;
-        quote.createdAt = timestamp;
-        quote.updatedAt = timestamp;
+        quote.createdAt = std::string(timestamp);
+        quote.updatedAt = std::string(timestamp);
         
         repo_->create(quote);
         
@@ -232,9 +229,9 @@ void QuoteHandlers::update(const drogon::HttpRequestPtr& req,
         }
         
         auto now = std::time(nullptr);
-        std::stringstream ss;
-        ss << std::put_time(std::gmtime(&now), "%Y-%m-%d %H:%M:%S");
-        quote.updatedAt = ss.str();
+        char timestamp[32];
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::gmtime(&now));
+        quote.updatedAt = std::string(timestamp);
         
         repo_->update(id, quote);
         
