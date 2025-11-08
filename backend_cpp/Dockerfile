@@ -30,7 +30,10 @@ COPY backend_cpp /app
 
 # Build application
 RUN mkdir -p build && cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -march=native -flto" && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CXX_FLAGS="-O3 -march=native -flto" \
+        -DCMAKE_PREFIX_PATH=/usr/local && \
     cmake --build . -j$(nproc) && \
     cmake --install . --prefix /app/install
 
