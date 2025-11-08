@@ -42,7 +42,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Link libraries
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    drogon::drogon
+    drogon
     ${PostgreSQL_LIBRARIES}
 )
 
