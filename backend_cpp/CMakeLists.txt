@@ -21,12 +21,6 @@ set(SOURCES
     src/models.cpp
 )
 
-# Find UUID library
-find_library(UUID_LIBRARY uuid)
-if(UUID_LIBRARY)
-    target_link_libraries(${PROJECT_NAME} ${UUID_LIBRARY})
-endif()
-
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
